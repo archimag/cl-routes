@@ -2,7 +2,7 @@
 
 (defsystem :routes
   :version "0.1"
-  :depends-on (:puri)
+  :depends-on (:puri :iterate :split-sequence)
   :components ((:module "unify"
                         :serial t
                         :components ((:file "package")
@@ -10,4 +10,6 @@
                (:module "routes"
                         :serial t
                         :components ((:file "package")
-                                     (:file "routes")))))
+                                     (:file "parse" :depends-on ("package"))
+                                     (:file "routes" :depends-on ("parse")))
+                        :depends-on ("unify"))))

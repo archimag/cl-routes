@@ -4,4 +4,6 @@
   (:use :cl)
   (:nicknames :unify)
   (:export
-   unify))
+   unify
+   make-unify-template
+   ))

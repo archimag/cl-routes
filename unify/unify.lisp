@@ -27,6 +27,10 @@
 
 (define-unify-template variable)
 
+(defmethod print-object ((tmpl variable-template) stream)
+  (format stream "#$~S" (template-spec tmpl)))
+
+
 (defun variable-p (x)
   (typep x 'variable-template))
 
@@ -46,7 +50,9 @@
 (defmethod make-unify-template ((key (eql 'concat)) (spec (eql nil)))
   nil)
 
-    
+(defmethod print-object ((tmpl concat-template) stream)
+  (format stream "#$(CONCAT ~{~A~^ ~})" (template-spec tmpl)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; bindings (substitutions)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

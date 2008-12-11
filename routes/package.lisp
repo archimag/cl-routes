@@ -1,6 +1,8 @@
 ;; package.lisp
 
 (defpackage :routes
-  (:use :cl)
+  (:use :cl :iter :routes.unify :split-sequence)
   (:export
-   router))
+   :make-route
+   :match
+   :route))
