@@ -10,6 +10,6 @@
                (:module "routes"
                         :serial t
                         :components ((:file "package")
-                                     (:file "parse" :depends-on ("package"))
-                                     (:file "routes" :depends-on ("parse")))
+                                     (:file "routes" :depends-on ("package"))
+                                     (:file "mapper" :depends-on ("routes")))
                         :depends-on ("unify"))))
