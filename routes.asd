@@ -6,10 +6,11 @@
   :components ((:module "unify"
                         :serial t
                         :components ((:file "package")
-                                     (:file "unify" :depends-on ("package"))))
+                                     (:file "unify" :depends-on ("package"))
+                                     (:file "merge" :depends-on ("unify"))))
                (:module "routes"
                         :serial t
                         :components ((:file "package")
-                                     (:file "routes" :depends-on ("package"))
-                                     (:file "mapper" :depends-on ("routes")))
+                                     (:file "route" :depends-on ("package"))
+                                     (:file "mapper" :depends-on ("route")))
                         :depends-on ("unify"))))

@@ -1,9 +1,10 @@
 ;; package.lisp
 
 (defpackage :routes.unify
-  (:use :cl)
+  (:use :cl :iter)
   (:nicknames :unify)
   (:export
    unify
    make-unify-template
+   merge-templates
    ))

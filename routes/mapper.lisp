@@ -5,3 +5,5 @@
 ;;; mapper
 
 (defclass mapper () ())
+
+(defun connect (map route))

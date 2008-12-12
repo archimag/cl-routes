@@ -38,6 +38,8 @@
 
 (define-unify-template or)
 
+(defmethod print-object ((tmpl or-template) stream)
+  (format stream "#$(OR ~{~A~^ ~})" (template-spec tmpl)))
 ;;; concat template
 
 (defclass concat-template (unify-template) ())
@@ -166,7 +168,6 @@
   (unify b a bindings))
 
 (defmethod unify/impl ((tmpl or-template) x bindings)
-  (print "hello")
   (let ((spec (template-spec tmpl)))
     (or (unify (car spec) x bindings)
         (if (cdr spec)

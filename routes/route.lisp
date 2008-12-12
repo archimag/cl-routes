@@ -2,30 +2,28 @@
 
 (in-package :routes)
 
-;;; routes
+;;; route
 
 (defclass route ()
   ((template :initarg :template)))
 
-
-;;; make-routes
+;;; make-route
 
 (defun parse-path (str)
-  (flet ((mkvar (name) (intern (string-upcase name))))
+  (flet ((mkvar (name)
+           (make-unify-template 'variable (intern (string-upcase name)))))
     (if (> (length str) 0)
         (let ((pos (position #\: str)))
           (if pos
-              (let ((rest (if (char= (elt str (1+ pos)) #\{)
-                              (let ((end (position #\} str :start (1+ pos))))
+              (let ((rest (if (char= (elt str (1+ pos)) #\()
+                              (let ((end (position #\) str :start (1+ pos))))
                                 (if end
-                                    (cons (make-unify-template 'variable
-                                                               (mkvar (subseq str (+ pos 2) end)))
+                                    (cons (mkvar (subseq str (+ pos 2) end))
                                           (handler-case
                                               (parse-path (subseq str (1+ end)))
                                             (condition () (error "Bad format of the ~S" str))))
                                     (error "Bad format of the ~S" str)))
-                              (list (make-unify-template 'variable
-                                                         (mkvar (subseq str (1+ pos))))))))
+                              (list (mkvar (subseq str (1+ pos)))))))
                 (if (> pos 0)
                     (cons (subseq str 0 pos) rest)
                     rest))
@@ -38,7 +36,6 @@
                                             (if (cdr spec)
                                                 (make-unify-template 'unify::concat spec)
                                                 (car spec)))))))
-
 ;;; match
 
 (defun match (route uri)
