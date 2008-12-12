@@ -59,7 +59,7 @@
                                                   (concatenate 'list left (list x) right)
                                                   (cons b left)))))))
 
-(defmethod merge-template/impl ((a or-template) (b or-template))
+(defmethod merge-templates/impl ((a or-template) (b or-template))
   (error "not implemented"))
 
 ;;; merge-templates

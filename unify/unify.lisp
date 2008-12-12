@@ -40,6 +40,7 @@
 
 (defmethod print-object ((tmpl or-template) stream)
   (format stream "#$(OR ~{~A~^ ~})" (template-spec tmpl)))
+
 ;;; concat template
 
 (defclass concat-template (unify-template) ())
@@ -54,6 +55,22 @@
 
 (defmethod print-object ((tmpl concat-template) stream)
   (format stream "#$(CONCAT ~{~A~^ ~})" (template-spec tmpl)))
+
+
+;;; with-bindings-template
+
+;; (defclass with-bindings-template (unify-template)
+;;   ((spec :initarg :spec :accessor template-spec)
+;;    (bindings :initarg :bindings :reader bindings)))
+
+;; (defmethod make-unify-template ((key (eql 'with-bindings)) data)
+;;   (if (consp data)
+;;       (let ((rdata (reverse data))
+;;   (make-instance 'with-bindings-template
+;;                  :spec (car spec)
+;;                  :bindings (cdr spec)))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; bindings (substitutions)
@@ -152,12 +169,12 @@
         (unify-template (let* ((second-spec (second spec))
                                (pos (search second-spec str)))
                           (if pos
-                              (unify first-spec
-                                     (subseq str 0 pos)
-                                     (unify (make-unify-template 'concat (cddr spec))
-                                            (if (> (length str)
-                                                   (+ (length second-spec) pos))
-                                                (subseq str (+ (length second-spec) pos)))
+                              (unify (make-unify-template 'concat (cddr spec))
+                                     (if (> (length str)
+                                            (+ (length second-spec) pos))
+                                         (subseq str (+ (length second-spec) pos)))
+                                     (unify first-spec
+                                            (subseq str 0 pos)
                                             bindings))
                               +fail+)))
         (t +fail+)))))

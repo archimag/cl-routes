@@ -11,7 +11,7 @@
 
 (defun parse-path (str)
   (flet ((mkvar (name)
-           (make-unify-template 'variable (intern (string-upcase name)))))
+           (make-unify-template 'variable (intern (string-upcase name) :keyword))))
     (if (> (length str) 0)
         (let ((pos (position #\: str)))
           (if pos
@@ -38,7 +38,12 @@
                                                 (car spec)))))))
 ;;; match
 
-(defun match (route uri)
+(defgeneric match (obj uri))
+
+(defmethod match (obj (uri string))
+  (match obj (puri:parse-uri uri)))
+
+(defmethod match ((route route) (uri puri:uri))
   (unify (slot-value route 'template)
          (cdr (puri:uri-parsed-path uri))))
 
