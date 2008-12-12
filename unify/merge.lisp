@@ -23,17 +23,6 @@
   (and (template= (car a) (car b))
        (template= (cdr a) (cdr b))))
 
-;;; shared-starts
-
-(defgeneric starts-with-same-p (a b))
-
-(defmethod starts-with-same-p (a b)
-  (template= a b))
-
-(defmethod starts-with-same-p ((a cons) (b cons))
-  (template= (car a) (car b)))
-  
-
 ;;; merge-templates/impl
 
 (defgeneric merge-templates/impl (a b))
