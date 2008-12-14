@@ -11,7 +11,6 @@
     (lambda (req)
       (let ((match-result (cdr (routes:match map
                                              (hunchentoot:request-uri req)))))
-        (hunchentoot:dispatch-easy-handlers req)
         (if match-result
             (progn
               (setf (hunchentoot:aux-request-value 'routes-handler) (cdr (assoc :handler match-result)))
