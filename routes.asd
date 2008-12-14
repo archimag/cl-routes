@@ -6,7 +6,8 @@
   :components ((:module "unify"
                         :serial t
                         :components ((:file "package")
-                                     (:file "unify" :depends-on ("package"))
+                                     (:file "bindings" :depends-on ("package"))
+                                     (:file "unify" :depends-on ("bindings"))
                                      (:file "merge" :depends-on ("unify"))))
                (:module "routes"
                         :serial t
