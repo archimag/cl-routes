@@ -29,6 +29,7 @@
 (defgeneric route-extend-bindings (route bindings))
 
 (defmethod route-extend-bindings ((route route) bindings)
+  ;;(error (slot-value route 'extra-bindings))
   (let ((extra-bindings (slot-value route 'extra-bindings)))
     (if extra-bindings
         (iter (for x in extra-bindings)
@@ -75,14 +76,7 @@
                                                 (make-unify-template 'unify::concat spec)
                                                 (car spec)))))
                  :extra-bindings (plist->alist extra-bindings)
-;;                  (iter (for rest on extra-bindings by #'cddr)
-;;                                        (collect (cons (car rest)
-;;                                                       (cadr rest))))
-                 :conditions (plist->alist conditions)
-;;                  (iter (for rest on conditions by #'cddr)
-;;                                    (collect (cons (car rest)
-;;                                                   (cadr rest))))
-                 ))
+                 :conditions (plist->alist conditions)))
 
 ;;; unify/impl for route
 
@@ -91,9 +85,11 @@
   
 (defmethod unify::unify/impl ((a unify::variable-template) (route route) bindings)
   (if (route-check-conditions route bindings)
-      (call-next-method a
-                        route
-                        (route-extend-bindings route bindings))))
+      (let ((e-bindings (route-extend-bindings route bindings)))
+        (if e-bindings
+            (call-next-method a
+                              route
+                              e-bindings)))))
 
 
 

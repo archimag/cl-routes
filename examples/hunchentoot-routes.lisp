@@ -14,18 +14,16 @@
 ;;; vhost "archimag"
 
 (defun index.html (bindings)
-  ;;(declare (ignore bindings))
-  (error bindings)
+  (declare (ignore bindings))
   (who:with-html-output-to-string (s)
     (:html 
      (:body 
       (:h1 "Index")
       (:ul (loop for x from 1 to 10
               do (who:htm (:li (:a :href (format nil "chapter-~S.html" x)
-                                   (who:str (format nil "Chapter ~S" x))))))))))))
+                                   (who:str (format nil "Chapter ~S" x)))))))))))
   
 (defun chapter-?.html (bindings)
-  (error bindings)
   (let ((id (cdr (assoc :id bindings))))
     (who:with-html-output-to-string (s)
       (:html
@@ -45,7 +43,7 @@
                                     "routes/index.html"
                                     'index.html
                                     :host "archimag:8080"
-                                    :method :post)
+                                    :method :get)
 
 ;;; vhost "tabris"
 
@@ -54,18 +52,31 @@
   (who:with-html-output-to-string (s)
     (:html
      (:body
-      (:h1 "Welcome to Tabris!")))))
+      (:h1 "Welcome to Tabris!")
+      (:form :method "post" :action "index.html"
+       (:div "Input test message:")
+       (:input :name "message")
+       (:input :value "Send" :type "submit"))))))
 
 (defun welcome-to-tabris.post.html (bindings)
   (declare (ignore bindings))
   (who:with-html-output-to-string (s)
     (:html
      (:body
-      (:h1 "Welcome to Tabris2!")))))
+      (:h1 "Welcome to Tabris!")
+      (:div (:b "test message: ")
+            (who:str (hunchentoot:post-parameter "message")))
+      (:a :href "" "again")))))
+
+(routes.hunchentoot:connect-handler *map*
+                                    "index.html"
+                                    'welcome-to-tabris.get.html
+                                    :host "tabris:8080"
+                                    :method :get)
 
 (routes.hunchentoot:connect-handler *map*
                                     "index.html"
                                     'welcome-to-tabris.post.html
                                     :host "tabris:8080"
-                                    :method :get)
+                                    :method :post)
                                     
