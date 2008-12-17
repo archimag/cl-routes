@@ -1,7 +1,7 @@
 ;; routes.asd
 
 (defsystem :routes
-  :version "0.1"
+  :version "0.2"
   :depends-on (:puri :iterate :split-sequence)
   :components ((:module "unify"
                         :serial t

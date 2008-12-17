@@ -20,19 +20,25 @@
               (concatenate 'list
                            route-spec)))))
 
+;;; reset
+
+(defun reset-mapper (map)
+  (setf (slot-value map 'template) nil))
+
 ;;; match
 
-(defgeneric match (map uri))
+(defgeneric match (map uri &optional bindings))
 
-(defmethod match (map (uri string))
-  (match map (puri:parse-uri uri)))
+(defmethod match (map (uri string) &optional (bindings +no-bindings+))
+  (match map (puri:parse-uri uri) bindings))
 
-(defmethod match ((map mapper) (uri puri:uri))
+(defmethod match ((map mapper) (uri puri:uri) &optional (bindings +no-bindings+))
   (let ((res (unify (slot-value map 'template)
                     (concatenate 'list
                                  (cdr (puri:uri-parsed-path uri))
                                  (list (make-unify-template 'variable
-                                                            'routes:route))))))
+                                                            'routes:route)))
+                    bindings)))
     (if res
         (let ((route (cdar res))
               (bindings (cdr res)))

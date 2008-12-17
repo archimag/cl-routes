@@ -62,6 +62,11 @@
                     rest))
               (list str))))))
 
+(defun plist->alist (plist)
+  (iter (for rest on plist by #'cddr)
+        (collect (cons (car rest)
+                       (cadr rest)))))
+
 (defun make-route (tmpl &key extra-bindings conditions)
   (make-instance 'route
                  :template (iter (for path in (split-sequence #\/ tmpl :remove-empty-subseqs t))
@@ -69,12 +74,15 @@
                                             (if (cdr spec)
                                                 (make-unify-template 'unify::concat spec)
                                                 (car spec)))))
-                 :extra-bindings (iter (for rest on extra-bindings by #'cddr)
-                                       (collect (cons (car rest)
-                                                      (cadr rest))))
-                 :conditions (iter (for rest on conditions by #'cddr)
-                                   (collect (cons (car rest)
-                                                  (cadr rest))))))
+                 :extra-bindings (plist->alist extra-bindings)
+;;                  (iter (for rest on extra-bindings by #'cddr)
+;;                                        (collect (cons (car rest)
+;;                                                       (cadr rest))))
+                 :conditions (plist->alist conditions)
+;;                  (iter (for rest on conditions by #'cddr)
+;;                                    (collect (cons (car rest)
+;;                                                   (cadr rest))))
+                 ))
 
 ;;; unify/impl for route
 
@@ -86,5 +94,6 @@
       (call-next-method a
                         route
                         (route-extend-bindings route bindings))))
+
 
 

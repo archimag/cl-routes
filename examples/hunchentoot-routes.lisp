@@ -1,41 +1,31 @@
-;;; hunchentoot-routes.lisp
 
-(asdf:operate 'asdf:load-op 'hunchentoot)
 (asdf:operate 'asdf:load-op 'cl-who)
-(asdf:operate 'asdf:load-op 'routes)
+(asdf:operate 'asdf:load-op 'hunchentoot-routes)
 
-(defun create-route-dispatcher (map)
-  (flet ((routes-handler ()
-           (funcall (hunchentoot:aux-request-value 'routes-handler)
-                    (hunchentoot:aux-request-value 'routes-bindings))))
-    (lambda (req)
-      (let ((match-result (cdr (routes:match map
-                                             (hunchentoot:request-uri req)))))
-        (if match-result
-            (progn
-              (setf (hunchentoot:aux-request-value 'routes-handler) (cdr (assoc :handler match-result)))
-              (setf (hunchentoot:aux-request-value 'routes-bindings) match-result)
-              #'routes-handler))))))
 
 (defparameter *map* (make-instance 'routes:mapper))
 
 (setq hunchentoot:*dispatch-table*
-      (list (create-route-dispatcher *map*)
+      (list (routes.hunchentoot:make-dispatcher *map*)
             #'hunchentoot:default-dispatcher))
-    
-(hunchentoot:start-server :port 8080)
+
+(defparameter *server* (hunchentoot:start-server :port 8080))
+
+;;; vhost "archimag"
 
 (defun index.html (bindings)
-  (let ((count (cdr (assoc :count-chapters bindings))))
-    (who:with-html-output-to-string (s)
-      (:html 
-       (:body 
-        (:h1 "Index")
-        (:ul (loop for x from 1 to count
-                do (who:htm (:li (:a :href (format nil "chapter-~S.html" x)
-                                     (who:str (format nil "Chapter ~S" x))))))))))))
+  ;;(declare (ignore bindings))
+  (error bindings)
+  (who:with-html-output-to-string (s)
+    (:html 
+     (:body 
+      (:h1 "Index")
+      (:ul (loop for x from 1 to 10
+              do (who:htm (:li (:a :href (format nil "chapter-~S.html" x)
+                                   (who:str (format nil "Chapter ~S" x))))))))))))
   
 (defun chapter-?.html (bindings)
+  (error bindings)
   (let ((id (cdr (assoc :id bindings))))
     (who:with-html-output-to-string (s)
       (:html
@@ -44,7 +34,38 @@
         (:p (who:fmt "This is a chapter number ~A" id))
         (:a :href "index.html" "Back to index"))))))
 
-(routes:connect *map* (routes:make-route "routes/chapter-:(id).html" :extra-bindings '(:handler chapter-?.html)))
-(routes:connect *map* (routes:make-route "routes/index.html" :extra-bindings '(:handler index.html :count-chapters 10)))
 
+(routes.hunchentoot:connect-handler *map*
+                                    "routes/chapter-:(id).html"
+                                    'chapter-?.html
+                                    :host "archimag:8080"
+                                    :method :get)
 
+(routes.hunchentoot:connect-handler *map*
+                                    "routes/index.html"
+                                    'index.html
+                                    :host "archimag:8080"
+                                    :method :post)
+
+;;; vhost "tabris"
+
+(defun welcome-to-tabris.get.html (bindings)
+  (declare (ignore bindings))
+  (who:with-html-output-to-string (s)
+    (:html
+     (:body
+      (:h1 "Welcome to Tabris!")))))
+
+(defun welcome-to-tabris.post.html (bindings)
+  (declare (ignore bindings))
+  (who:with-html-output-to-string (s)
+    (:html
+     (:body
+      (:h1 "Welcome to Tabris2!")))))
+
+(routes.hunchentoot:connect-handler *map*
+                                    "index.html"
+                                    'welcome-to-tabris.post.html
+                                    :host "tabris:8080"
+                                    :method :get)
+                                    
