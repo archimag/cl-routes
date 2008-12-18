@@ -2,8 +2,11 @@
 
 (defpackage :routes.hunchentoot
   (:use :cl :split-sequence :iter :routes )
+  (:nicknames :routes.h)
   (:export :make-dispatcher
-           :connect-handler))
+           :connect-handler
+           :route-parameters
+           :route-parameter))
 
 (in-package :routes.hunchentoot)
 
@@ -11,6 +14,16 @@
 
 (defclass hunchentoot-route (route)
   ((handler :initarg :handler :reader route-handler)))
+
+;;; route-parameters
+
+(defvar *route-parameters*)
+
+(defun route-parameters ()
+  *route-parameters*)
+
+(defun route-parameter (name)
+  (cdr (assoc name (route-parameters) :test #'string=)))
 
 ;;; make-dispatcher
 
@@ -21,8 +34,8 @@
 
 (defun make-dispatcher (map)
   (flet ((routes-handler ()
-           (funcall (hunchentoot:aux-request-value 'routes-handler)
-                    (hunchentoot:aux-request-value 'routes-bindings))))
+           (let ((*route-parameters* (hunchentoot:aux-request-value 'routes-bindings)))
+             (funcall (hunchentoot:aux-request-value 'routes-handler)))))
     (lambda (req)
       (let ((match-result (routes:match map
                                         (hunchentoot:request-uri req)
@@ -41,7 +54,6 @@
         (setq bindings (acons :method method bindings)))
     (if host
         (setq bindings (acons :host host bindings)))
-    (print bindings)
     (connect mapper
              (make-instance 'hunchentoot-route                            
                             :template (iter (for path in (split-sequence #\/ tmpl :remove-empty-subseqs t))

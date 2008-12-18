@@ -56,7 +56,6 @@
 (defmethod print-object ((tmpl concat-template) stream)
   (format stream "#$(CONCAT ~{~A~^ ~})" (template-spec tmpl)))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; unify/impl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -129,9 +128,16 @@
 
 (defmethod unify/impl ((tmpl or-template) x bindings)
   (let ((spec (template-spec tmpl)))
-    (or (unify (car spec) x bindings)
-        (if (cdr spec)
-            (unify (make-unify-template 'or (cdr spec)) x bindings)))))
+    (iter (for item in spec)
+          (with result = nil)
+          (with result-variable-count = -1)
+          (let* ((item-unify-result (unify item x bindings))
+                 (count (if item-unify-result (length item-unify-result))))
+            (if (and count (> count result-variable-count))
+                (progn 
+                  (setq result item-unify-result)
+                  (setq result-variable-count count))))
+          (finally (return result)))))
 
 ;;; default unify/impl    
 
