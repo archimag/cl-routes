@@ -35,7 +35,7 @@
                (cdr (match map #u"forum/develop/34/25"))))
 
 (addtest (routes-test)
-  grouping-2
+  grouping-1
   (ensure-same '((:year . "2008") (:month . "12") (:day . "12"))
                (cdr (match map "archive/2008-12-12.html"))))
 

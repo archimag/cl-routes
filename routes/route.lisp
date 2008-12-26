@@ -1,5 +1,4 @@
 ;; routes.lisp
-
 (in-package :routes)
 
 ;;; route
@@ -68,15 +67,26 @@
         (collect (cons (car rest)
                        (cadr rest)))))
 
+
 (defun make-route (tmpl &key extra-bindings conditions)
-  (make-instance 'route
-                 :template (iter (for path in (split-sequence #\/ tmpl :remove-empty-subseqs t))
-                                 (collect (let ((spec (parse-path path)))
-                                            (if (cdr spec)
-                                                (make-unify-template 'unify::concat spec)
-                                                (car spec)))))
-                 :extra-bindings (plist->alist extra-bindings)
-                 :conditions (plist->alist conditions)))
+  (let ((bindings (plist->alist extra-bindings)))
+    (if (puri:uri-p tmpl)
+        (progn
+          (if (puri:uri-scheme tmpl)
+              (setq bindings (extend-bindings :scheme (puri:uri-scheme tmpl) (or bindings +no-bindings+))))
+          (if (puri:uri-host tmpl)
+              (setq bindings (extend-bindings :host (puri:uri-host tmpl) (or bindings +no-bindings+))))))
+    (make-instance 'route
+                   :template (apply-bindings (iter (for path in (if (puri:uri-p tmpl)
+                                                                    (cdr (puri:uri-parsed-path tmpl))
+                                                                    (split-sequence #\/ tmpl :remove-empty-subseqs t)))
+                                                   (collect (let ((spec (parse-path path)))
+                                                              (if (cdr spec)
+                                                                  (make-unify-template 'unify::concat spec)
+                                                                  (car spec)))))
+                                             bindings)
+                   :extra-bindings bindings
+                   :conditions (plist->alist conditions))))
 
 ;;; unify/impl for route
 
@@ -91,5 +101,13 @@
                               route
                               e-bindings)))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; generate-url
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+(defun generate-url (route bindings)
+  (format nil
+          "~{~A~^/~}"
+          (apply-bindings (slot-value route 'template)
+                          bindings)))
+  

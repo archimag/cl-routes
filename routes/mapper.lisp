@@ -25,17 +25,38 @@
 (defun reset-mapper (map)
   (setf (slot-value map 'template) nil))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; match
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defgeneric match (map uri &optional bindings))
+
+;;; match (map (uri string))
 
 (defmethod match (map (uri string) &optional (bindings +no-bindings+))
   (match map (puri:parse-uri uri) bindings))
 
-(defmethod match ((map mapper) (uri puri:uri) &optional (bindings +no-bindings+))
+;;; match (map (uri puri:uri))
+
+(defmethod match (map (uri puri:uri) &optional (bindings +no-bindings+))
+  (match map (cdr (puri:uri-parsed-path uri)) bindings))
+
+;;; match (map (route routes))
+
+(defmethod match (map (route route) &optional (bindings +no-bindings+))
+  (match map
+         (slot-value route 'template)
+         (iter (for pair in (slot-value route 'extra-bindings))
+               (reducing pair
+                         by #'(lambda (b p) (extend-bindings (car p) (cdr p) b))
+                         initial-value bindings))))
+
+;;; match (map (paths cons))
+
+(defmethod match (map (paths cons) &optional (bindings +no-bindings+))
   (let ((res (unify (slot-value map 'template)
                     (concatenate 'list
-                                 (cdr (puri:uri-parsed-path uri))
+                                 (apply-bindings paths bindings)
                                  (list (make-unify-template 'variable
                                                             'routes:route)))
                     bindings)))
@@ -44,7 +65,4 @@
               (bindings (cdr res)))
           (cons route
                 (reverse bindings))))))
-                
-  
-        
-
+          

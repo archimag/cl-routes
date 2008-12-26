@@ -8,7 +8,8 @@
                         :components ((:file "package")
                                      (:file "bindings" :depends-on ("package"))
                                      (:file "unify" :depends-on ("bindings"))
-                                     (:file "merge" :depends-on ("unify"))))
+                                     (:file "merge" :depends-on ("unify"))
+                                     (:file "apply" :depends-on ("bindings"))))
                (:module "routes"
                         :serial t
                         :components ((:file "package")
