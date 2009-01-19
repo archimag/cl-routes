@@ -134,6 +134,7 @@
           (with result-variable-count = -1)
           (let* ((item-unify-result (unify item x bindings))
                  (count (if item-unify-result (length item-unify-result))))
+            (if (and item-unify-result (typep (car item) 'string)) (return item-unify-result))
             (if (and count (> count result-variable-count))
                 (progn 
                   (setq result item-unify-result)
