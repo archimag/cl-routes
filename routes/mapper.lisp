@@ -31,10 +31,17 @@
 
 (defgeneric match (map uri &optional bindings))
 
+;;; match (map (empty (eql nil)
+
+(defmethod match (map (empty (eql nil)) &optional (bindings +no-bindings+))
+  (match map '(nil) bindings))
+
 ;;; match (map (uri string))
 
 (defmethod match (map (uri string) &optional (bindings +no-bindings+))
-  (match map (puri:parse-uri uri) bindings))
+  (if (string= uri "/")
+      (match map nil bindings)
+      (match map (puri:parse-uri uri) bindings)))
 
 ;;; match (map (uri puri:uri))
 
@@ -54,11 +61,15 @@
 ;;; match (map (paths cons))
 
 (defmethod match (map (paths cons) &optional (bindings +no-bindings+))
+  (print paths)
   (let ((res (unify (slot-value map 'template)
-                    (concatenate 'list
-                                 (apply-bindings paths bindings)
-                                 (list (make-unify-template 'variable
-                                                            'routes:route)))
+                    (if (car paths)
+                        (concatenate 'list
+                                     (apply-bindings paths bindings)
+                                     (list (make-unify-template 'variable
+                                                                'routes:route)))
+                        (list (make-unify-template 'variable
+                                                   'routes:route)))
                     bindings)))
     (if res
         (let ((route (cdar res))

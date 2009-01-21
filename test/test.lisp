@@ -15,6 +15,7 @@
   (map)
   (:setup (progn
             (setq map (make-instance 'mapper))
+            (connect map (make-route "" :extra-bindings '(:data "default-handler")))
             (connect map (make-route "archive/:year/:month/:day"))
             (connect map (make-route "forum/:chapter/:topic/:message"))
             (connect map (make-route "archive/:(year)-:(month)-:(day).html"))
@@ -53,6 +54,11 @@
   conditions-2
   (ensure-same 'not-develop-comment
                (cdr (assoc :view (cdr (match map "forum/live/453/23/12"))))))
+
+(addtest (routes-test)
+  empty-url
+  (ensure-same "default-handler"
+               (match map "")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
