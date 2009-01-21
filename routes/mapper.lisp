@@ -61,7 +61,6 @@
 ;;; match (map (paths cons))
 
 (defmethod match (map (paths cons) &optional (bindings +no-bindings+))
-  (print paths)
   (let ((res (unify (slot-value map 'template)
                     (if (car paths)
                         (concatenate 'list
