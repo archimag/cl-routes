@@ -16,6 +16,8 @@
   (:setup (progn
             (setq map (make-instance 'mapper))
             (connect map (make-route "" :extra-bindings '(:data "default-handler")))
+            (connect map (make-route "foo/bar/" :extra-bindings '(:data "default-handler")))
+            (connect map (make-route "data/&rest" :extra-bindings '(:data "rest-handler")))
             (connect map (make-route "archive/:year/:month/:day"))
             (connect map (make-route "forum/:chapter/:topic/:message"))
             (connect map (make-route "archive/:(year)-:(month)-:(day).html"))
@@ -58,7 +60,17 @@
 (addtest (routes-test)
   empty-url
   (ensure-same "default-handler"
-               (match map "")))
+               (cdr (assoc :data (cdr (match map ""))))))
+
+(addtest (routes-test)
+  empty-url-2
+  (ensure-same "default-handler"
+               (cdr (assoc :data (cdr (match map "/foo/bar/"))))))
+
+;; (addtest (routes-test)
+;;   wildcard-1
+;;   (ensure-same "rest-handler"
+;;                (match map "data/1")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

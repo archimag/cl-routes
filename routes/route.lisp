@@ -19,7 +19,7 @@
               (unless (funcall (cdr condition)
                                (routes.unify::lookup (car condition)
                                                      bindings))
-                (return nil))
+nnn                (return nil))
               (finally (return t)))
         t)))
 
@@ -60,7 +60,8 @@
                 (if (> pos 0)
                     (cons (subseq str 0 pos) rest)
                     rest))
-              (list str))))))
+              (list str)))
+        '(""))))
 
 (defun plist->alist (plist)
   (iter (for rest on plist by #'cddr)
@@ -79,7 +80,7 @@
     (make-instance 'route
                    :template (apply-bindings (iter (for path in (if (puri:uri-p tmpl)
                                                                     (cdr (puri:uri-parsed-path tmpl))
-                                                                    (split-sequence #\/ tmpl :remove-empty-subseqs t)))
+                                                                    (split-sequence #\/ tmpl :remove-empty-subseqs nil)))
                                                    (collect (let ((spec (parse-path path)))
                                                               (if (cdr spec)
                                                                   (make-unify-template 'unify::concat spec)

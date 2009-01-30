@@ -39,14 +39,14 @@
 ;;; match (map (uri string))
 
 (defmethod match (map (uri string) &optional (bindings +no-bindings+))
-  (if (string= uri "/")
-      (match map nil bindings)
+;;  (if (string= uri "/")
+;;      (match map nil bindings)
       (match map (puri:parse-uri uri) bindings)))
 
 ;;; match (map (uri puri:uri))
 
 (defmethod match (map (uri puri:uri) &optional (bindings +no-bindings+))
-  (match map (cdr (puri:uri-parsed-path uri)) bindings))
+  (match map (or (cdr (puri:uri-parsed-path uri)) '("")) bindings))
 
 ;;; match (map (route routes))
 
