@@ -19,7 +19,7 @@
               (unless (funcall (cdr condition)
                                (routes.unify::lookup (car condition)
                                                      bindings))
-nnn                (return nil))
+                (return nil))
               (finally (return t)))
         t)))
 

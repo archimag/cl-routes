@@ -41,7 +41,7 @@
 (defmethod match (map (uri string) &optional (bindings +no-bindings+))
 ;;  (if (string= uri "/")
 ;;      (match map nil bindings)
-      (match map (puri:parse-uri uri) bindings)))
+      (match map (puri:parse-uri uri) bindings))
 
 ;;; match (map (uri puri:uri))
 
