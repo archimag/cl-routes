@@ -52,9 +52,10 @@
                               (let ((end (position #\) str :start (1+ pos))))
                                 (if end
                                     (cons (mkvar (subseq str (+ pos 2) end))
-                                          (handler-case
-                                              (parse-path (subseq str (1+ end)))
-                                            (condition () (error "Bad format of the ~S" str))))
+                                          (if (< (1+ end) (length str))
+                                              (handler-case
+                                                  (parse-path (subseq str (1+ end)))
+                                                (condition () (error "Bad format of the ~S" str)))))
                                     (error "Bad format of the ~S" str)))
                               (list (mkvar (subseq str (1+ pos)))))))
                 (if (> pos 0)
@@ -68,6 +69,9 @@
         (collect (cons (car rest)
                        (cadr rest)))))
 
+(defun split-template (tmpl)
+  (split-sequence #\/ (string-left-trim "/" tmpl)))
+
 
 (defun make-route (tmpl &key extra-bindings conditions)
   (let ((bindings (plist->alist extra-bindings)))
@@ -80,7 +84,7 @@
     (make-instance 'route
                    :template (apply-bindings (iter (for path in (if (puri:uri-p tmpl)
                                                                     (cdr (puri:uri-parsed-path tmpl))
-                                                                    (split-sequence #\/ tmpl :remove-empty-subseqs nil)))
+                                                                    (split-template tmpl)))
                                                    (collect (let ((spec (parse-path path)))
                                                               (if (cdr spec)
                                                                   (make-unify-template 'unify::concat spec)
