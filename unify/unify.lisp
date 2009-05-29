@@ -11,6 +11,11 @@
 (defclass unify-template ()
   ((spec :initarg :spec :accessor template-spec)))
 
+(defmethod make-load-form ((self unify-template) &optional env)
+  (declare (ignore env))
+  `(make-instance ',(class-name (class-of self))
+                  :spec ',(template-spec self)))
+
 (defun template-p (x)
   (typep x 'unify-template))
 
@@ -23,6 +28,24 @@
        (defmethod make-unify-template ((key (eql (quote ,key))) spec)
          (make-instance (quote ,name) :spec spec)))))
 
+;;; template-variables
+
+(defgeneric template-variables (tmpl))
+
+(defmethod template-variables (tmpl)
+  nil)
+
+(defmethod template-variables ((tmpl (eql nil)))
+  nil)
+
+(defmethod template-variables ((tmpl cons))
+  (concatenate 'list
+               (template-variables (car tmpl))
+               (template-variables (cdr tmpl))))
+
+(defmethod template-variables ((tmpl unify-template))
+  (template-variables (template-spec tmpl)))
+
 ;;; variable-template
 
 (define-unify-template variable)
@@ -30,6 +53,8 @@
 (defmethod print-object ((tmpl variable-template) stream)
   (format stream "#$~S" (template-spec tmpl)))
 
+(defmethod template-variables ((tmpl variable-template))
+  (list (template-spec tmpl)))
 
 (defun variable-p (x)
   (typep x 'variable-template))
@@ -55,7 +80,6 @@
 
 (defmethod print-object ((tmpl concat-template) stream)
   (format stream "#$(CONCAT ~{~A~^ ~})" (template-spec tmpl)))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; unify/impl

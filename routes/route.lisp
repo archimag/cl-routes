@@ -93,6 +93,12 @@
                    :extra-bindings bindings
                    :conditions (plist->alist conditions))))
 
+;;; route-variables
+
+(defun route-variables (route)
+  (routes.unify:template-variables (slot-value route
+                                               'template)))
+
 ;;; unify/impl for route
 
 (defmethod unify::unify/impl ((b route) (a unify::variable-template) bindings)

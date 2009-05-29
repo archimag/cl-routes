@@ -10,4 +10,5 @@
    :+no-bindings+
    :extend-bindings
    :apply-bindings
+   :template-variables
    ))

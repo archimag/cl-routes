@@ -7,6 +7,7 @@
    ;;; route
    :route
    :make-route
+   :route-variables
    :match
    ;;;mapper
    :mapper
