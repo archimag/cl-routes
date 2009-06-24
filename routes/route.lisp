@@ -105,12 +105,11 @@
   (unify::unify a b bindings))
   
 (defmethod unify::unify/impl ((a unify::variable-template) (route route) bindings)
-  (if (route-check-conditions route bindings)
-      (let ((e-bindings (route-extend-bindings route bindings)))
-        (if e-bindings
-            (call-next-method a
-                              route
-                              e-bindings)))))
+  (let ((e-bindings (route-extend-bindings route bindings)))
+    (if (route-check-conditions route e-bindings)
+        (call-next-method a
+                          route
+                          e-bindings))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; generate-url

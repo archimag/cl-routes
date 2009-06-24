@@ -8,6 +8,8 @@
    :route
    :make-route
    :route-variables
+   :route-check-conditions
+   :route-extend-bindings
    :match
    ;;;mapper
    :mapper
