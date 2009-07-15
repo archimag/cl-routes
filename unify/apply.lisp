@@ -23,9 +23,22 @@
 
 ;; optimize required
 (defmethod apply-bindings ((tmpl concat-template) bindings)
-  (make-unify-template 'concat
-                       (apply-bindings (template-spec tmpl)
-                                       bindings)))
+  (labels ((simplify (spec)
+             (cond
+               ((= (length spec) 1) spec)
+               ((and (stringp (first spec))
+                     (stringp (second spec)))
+                (simplify (cons (concatenate 'string
+                                             (first spec)
+                                             (second spec))
+                                (cddr spec))))
+               (t (cons (car spec)
+                        (simplify (cdr spec)))))))
+    (let ((spec (simplify (apply-bindings (template-spec tmpl)
+                                          bindings))))
+      (if (cdr spec)
+          (make-unify-template 'concat spec)
+          (car spec)))))
 
   
   
