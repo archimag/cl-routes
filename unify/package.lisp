@@ -2,7 +2,6 @@
 
 (defpackage :routes.unify
   (:use :cl :iter)
-  (:nicknames :unify)
   (:export
    :unify
    :make-unify-template
