@@ -86,7 +86,7 @@
 (define-unify-template wildcard)
 
 (defmethod print-object ((tmpl wildcard-template) stream)
-  (format stream "#$~A" (template-spec tmpl)))
+  (format stream "#@~S" (template-spec tmpl)))
 
 (defmethod template-variables ((tmpl wildcard-template))
   (list (template-spec tmpl)))
@@ -218,17 +218,3 @@
 (defmethod unify/impl (x y bindings)
   (if (eql x y) bindings +fail+))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; #$ reader
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; (defun sharp-$-reader (stream chr arg)
-;;   (declare (ignore chr arg))
-;;   (let ((spec (read stream nil nil t)))
-;;     (typecase spec
-;;       (cons (make-unify-template (find-symbol (symbol-name (first spec)) (find-package :unify))
-;;                                  (cdr spec)))
-;;       (symbol (make-unify-template 'variable spec))
-;;       (t (error "bad format of tempalte: ~A" spec)))))
-
-;;(set-dispatch-macro-character #\# #\$ #'unify::sharp-$-reader)
