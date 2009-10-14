@@ -46,22 +46,26 @@
   (flet ((mkvar (name)
            (make-unify-template 'variable (intern (string-upcase name) :keyword))))
     (if (> (length str) 0)
-        (let ((pos (position #\: str)))
-          (if pos
-              (let ((rest (if (char= (elt str (1+ pos)) #\()
-                              (let ((end (position #\) str :start (1+ pos))))
-                                (if end
-                                    (cons (mkvar (subseq str (+ pos 2) end))
-                                          (if (< (1+ end) (length str))
-                                              (handler-case
-                                                  (parse-path (subseq str (1+ end)))
-                                                (condition () (error "Bad format of the ~S" str)))))
-                                    (error "Bad format of the ~S" str)))
-                              (list (mkvar (subseq str (1+ pos)))))))
-                (if (> pos 0)
-                    (cons (subseq str 0 pos) rest)
-                    rest))
-              (list str)))
+        (if (char= (char str 0)
+                   #\*)
+            (list (make-unify-template 'routes.unify::wildcard
+                                       (intern (string-upcase (subseq str 1)) :keyword)))
+            (let ((pos (position #\: str)))
+              (if pos
+                  (let ((rest (if (char= (elt str (1+ pos)) #\()
+                                  (let ((end (position #\) str :start (1+ pos))))
+                                    (if end
+                                        (cons (mkvar (subseq str (+ pos 2) end))
+                                              (if (< (1+ end) (length str))
+                                                  (handler-case
+                                                      (parse-path (subseq str (1+ end)))
+                                                    (condition () (error "Bad format of the ~S" str)))))
+                                        (error "Bad format of the ~S" str)))
+                                  (list (mkvar (subseq str (1+ pos)))))))
+                    (if (> pos 0)
+                        (cons (subseq str 0 pos) rest)
+                        rest))
+                  (list str))))
         '(""))))
 
 (defun plist->alist (plist)
