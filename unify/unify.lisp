@@ -81,6 +81,16 @@
 (defmethod print-object ((tmpl concat-template) stream)
   (format stream "#$(CONCAT ~{~A~^ ~})" (template-spec tmpl)))
 
+;;; remainder template
+
+(define-unify-template wildcard)
+
+(defmethod print-object ((tmpl wildcard-template) stream)
+  (format stream "#$~A" (template-spec tmpl)))
+
+(defmethod template-variables ((tmpl wildcard-template))
+  (list (template-spec tmpl)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; unify/impl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -91,11 +101,40 @@
   (if bindings
       (unify/impl x y bindings)))
 
+;;; unify/impl for wildcard
+
+(defmethod unify/impl ((tmpl wildcard-template) x bindings &aux (var (template-spec tmpl)))
+  (cond ((get-binding var bindings)
+         (unify (lookup var bindings) x bindings))
+        ((and (variable-p x) (get-binding x bindings))
+         (unify var (lookup x bindings) bindings))
+        ((occurs-in-p var x bindings)
+         +fail+)
+        (t (extend-bindings var x bindings))))
+
+
 ;;; unify/impl for cons
 
 (defmethod unify/impl ((a cons) (b cons) bindings)
-  (unify (rest a) (rest b)
-         (unify (first a) (first b) bindings)))
+  (let ((wildcard-p-1 (typep (first a) 'wildcard-template))
+        (wildcard-p-2 (typep (first b) 'wildcard-template)))
+    (cond
+      ((and wildcard-p-1 wildcard-p-2) nil)
+      (wildcard-p-1 (let ((len (- (length b)
+                                  (length (cdr a)))))
+                      (if (not (minusp len))
+                          (unify (cdr a)
+                                 (subseq b len)
+                                 (unify (first a)
+                                        (subseq b 0 len)
+                                        bindings)))))
+      (wildcard-p-2 (unify/impl b a bindings))
+      (t (unify (rest a)
+                (rest b)
+                (unify (first a)
+                       (first b)
+                       bindings))))))
+
 
 ;;; unify/impl for strings
 
@@ -183,13 +222,13 @@
 ;; #$ reader
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun sharp-$-reader (stream chr arg)
-  (declare (ignore chr arg))
-  (let ((spec (read stream nil nil t)))
-    (typecase spec
-      (cons (make-unify-template (find-symbol (symbol-name (first spec)) (find-package :unify))
-                                 (cdr spec)))
-      (symbol (make-unify-template 'variable spec))
-      (t (error "bad format of tempalte: ~A" spec)))))
+;; (defun sharp-$-reader (stream chr arg)
+;;   (declare (ignore chr arg))
+;;   (let ((spec (read stream nil nil t)))
+;;     (typecase spec
+;;       (cons (make-unify-template (find-symbol (symbol-name (first spec)) (find-package :unify))
+;;                                  (cdr spec)))
+;;       (symbol (make-unify-template 'variable spec))
+;;       (t (error "bad format of tempalte: ~A" spec)))))
 
-(set-dispatch-macro-character #\# #\$ #'unify::sharp-$-reader)
+;;(set-dispatch-macro-character #\# #\$ #'unify::sharp-$-reader)
