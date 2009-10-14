@@ -72,6 +72,12 @@
 (defun split-template (tmpl)
   (split-sequence #\/ (string-left-trim "/" tmpl)))
 
+(defun parse-template (tmpl)
+  (iter (for path in (split-template (string-left-trim "/" tmpl)))
+        (collect (let ((spec (routes::parse-path path)))
+                   (if (cdr spec)
+                       (routes.unify:make-unify-template 'routes.unify::concat spec)
+                       (car spec))))))
 
 (defun make-route (tmpl &key extra-bindings conditions)
   (let ((bindings (plist->alist extra-bindings)))
@@ -82,13 +88,7 @@
           (if (puri:uri-host tmpl)
               (setq bindings (extend-bindings :host (puri:uri-host tmpl) (or bindings +no-bindings+))))))
     (make-instance 'route
-                   :template (apply-bindings (iter (for path in (if (puri:uri-p tmpl)
-                                                                    (cdr (puri:uri-parsed-path tmpl))
-                                                                    (split-template tmpl)))
-                                                   (collect (let ((spec (parse-path path)))
-                                                              (if (cdr spec)
-                                                                  (make-unify-template 'unify::concat spec)
-                                                                  (car spec)))))
+                   :template (apply-bindings (parse-template tmpl)
                                              bindings)
                    :extra-bindings bindings
                    :conditions (plist->alist conditions))))
@@ -101,10 +101,10 @@
 
 ;;; unify/impl for route
 
-(defmethod unify::unify/impl ((b route) (a unify::variable-template) bindings)
-  (unify::unify a b bindings))
+(defmethod routes.unify::unify/impl ((b route) (a routes.unify::variable-template) bindings)
+  (routes.unify::unify a b bindings))
   
-(defmethod unify::unify/impl ((a unify::variable-template) (route route) bindings)
+(defmethod routes.unify::unify/impl ((a routes.unify::variable-template) (route route) bindings)
   (let ((e-bindings (route-extend-bindings route bindings)))
     (if (route-check-conditions route e-bindings)
         (call-next-method a
