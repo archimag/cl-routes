@@ -199,13 +199,8 @@
                  (count (if item-unify-result (length item-unify-result))))
             (if (and item-unify-result
                      (not (find (car item)
-                           '(variable-template or-template concat-template)
-                           :test #'typep))
-;;                      (or (typep (car item) 'string)
-;;                          (not (find (car item)
-;;                                     '(variable or-template concat-template)))
-;;                          )
-                     )
+                           '(variable-template or-template concat-template wildcard-template)
+                           :test #'typep)))
                 (return item-unify-result))
             (if (and count (> count result-variable-count))
                 (progn 
