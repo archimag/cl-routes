@@ -13,11 +13,21 @@
   tmpl)
     
 (defmethod apply-bindings ((tmpl cons) bindings)
-  (cons (apply-bindings (car tmpl)
-                        bindings)
-        (apply-bindings (cdr tmpl) bindings)))
+  (let ((first (apply-bindings (car tmpl)
+                               bindings))
+        (rem (apply-bindings (cdr tmpl) bindings)))
+    (if (consp first)
+        (concatenate 'list
+                     first
+                     rem)
+        (cons first
+              rem))))
 
 (defmethod apply-bindings ((var variable-template) bindings)
+  (or (lookup (template-spec var) bindings)
+      var))
+
+(defmethod apply-bindings ((var wildcard-template) bindings)
   (or (lookup (template-spec var) bindings)
       var))
 
