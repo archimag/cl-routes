@@ -21,9 +21,15 @@
 
 ;;; make-route
 
-(defun parse-path (str)
+(defun parse-path (str &optional varspecs)
   (flet ((mkvar (name)
-           (make-unify-template 'variable (intern (string-upcase name) :keyword))))
+           (let* ((spec (intern (string-upcase name) :keyword))
+                  (parse-fun (getf varspecs spec )))
+             (if parse-fun
+                 (make-instance 'routes.unify::custom-variable-template
+                                :spec spec
+                                :parse parse-fun)
+                 (make-unify-template 'variable spec)))))
     (if (> (length str) 0)
         (if (char= (char str 0)
                    #\*)
@@ -55,16 +61,16 @@
 (defun split-template (tmpl)
   (split-sequence #\/ (string-left-trim "/" tmpl)))
 
-(defun parse-template (tmpl)
+(defun parse-template (tmpl &optional varspecs)
   (iter (for path in (split-template (string-left-trim "/" tmpl)))
-        (collect (let ((spec (routes::parse-path path)))
+        (collect (let ((spec (routes::parse-path path varspecs)))
                    (if (cdr spec)
                        (routes.unify:make-unify-template 'routes.unify::concat spec)
                        (car spec))))))
 
-(defun make-route (tmpl)
+(defun make-route (tmpl &optional varspecs)
   (make-instance 'route
-                 :template (parse-template tmpl)))
+                 :template (parse-template tmpl varspecs)))
 
 ;;; route-variables
 

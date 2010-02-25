@@ -65,6 +65,9 @@
 (defun variable-p (x)
   (typep x 'variable-template))
 
+(defclass custom-variable-template (variable-template)
+  ((parse-fun :initarg :parse :initform nil :reader custom-variable-parse-fun)))
+
 ;;; or-template
 
 (define-unify-template or)
@@ -106,6 +109,7 @@
 (defun unify (x y &optional (bindings +no-bindings+))
   (if bindings
       (unify/impl x y bindings)))
+
 
 ;;; unify/impl for wildcard
 
@@ -160,6 +164,19 @@
         ((occurs-in-p var x bindings)
          +fail+)
         (t (extend-bindings var x bindings))))
+
+;;; unify/impl custom-variable-template
+
+(defmethod unify/impl ((tmpl custom-variable-template) x bindings)
+  (let ((parsed-value (ignore-errors
+                        (funcall (custom-variable-parse-fun tmpl)
+                                 x))))
+    (if parsed-value
+        (call-next-method tmpl
+                          parsed-value)
+        +fail+)))
+                      
+                        
   
 ;;; unify/impl concat-template
 
