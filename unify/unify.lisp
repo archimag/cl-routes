@@ -1,8 +1,14 @@
-;; unify.lisp
+;;;; unify.lisp
+;;;;
+;;;; This file is part of the cl-routes library, released under Lisp-LGPL.
+;;;; See file COPYING for details.
+;;;;
+;;;; Author: Moskvitin Andrey <archimag@gmail.com>
+
 
 ;;;; Unification and Substitutions (based on code from AIMA by Peter Norvig)
 
-(in-package :routes.unify)
+(in-package #:routes.unify)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; unify-template

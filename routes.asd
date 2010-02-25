@@ -1,4 +1,10 @@
-;; routes.asd
+;;;; routes.asd
+;;;;
+;;;; This file is part of the cl-routes library, released under Lisp-LGPL.
+;;;; See file COPYING for details.
+;;;;
+;;;; Author: Moskvitin Andrey <archimag@gmail.com>
+
 
 (defpackage #:routes-system
   (:use #:cl #:asdf))

@@ -1,4 +1,10 @@
-;; test.lisp
+;;;; test.lisp
+;;;;
+;;;; This file is part of the cl-routes library, released under Lisp-LGPL.
+;;;; See file COPYING for details.
+;;;;
+;;;; Author: Moskvitin Andrey <archimag@gmail.com>
+
 
 (defpackage :routes.test
   (:use :cl :lift :routes)
