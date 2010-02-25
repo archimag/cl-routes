@@ -4,41 +4,13 @@
 ;;; route
 
 (defclass route ()
-  ((template :initarg :template)
-   (extra-bindings :initform nil :initarg :extra-bindings)
-   (conditions :initform nil :initarg :conditions)))
+  ((template :initarg :template)))
 
 ;;; check-conditions
 
-(defgeneric route-check-conditions (route bindings))
-
-(defmethod route-check-conditions ((route route) bindings)
-  (let ((conditions (slot-value route 'conditions)))
-    (if conditions
-        (iter (for condition in conditions)
-              (unless (funcall (cdr condition)
-                               (routes.unify::lookup (car condition)
-                                                     bindings))
-                (return nil))
-              (finally (return t)))
-        t)))
-
-;;; extend-binginds
-
-(defgeneric route-extend-bindings (route bindings))
-
-(defmethod route-extend-bindings ((route route) bindings)
-  ;;(error (slot-value route 'extra-bindings))
-  (let ((extra-bindings (slot-value route 'extra-bindings)))
-    (if extra-bindings
-        (iter (for x in extra-bindings)
-              (reducing x
-                        by (lambda (res pair)
-                             (unify (make-unify-template 'variable (car pair))
-                                    (cdr pair)
-                                    res))
-                        initial-value bindings))
-        bindings)))
+(defgeneric route-check-conditions (route bindings)
+  (:method ((route route) bindings)
+    t))
 
 ;;; make-route
 
@@ -83,19 +55,9 @@
                        (routes.unify:make-unify-template 'routes.unify::concat spec)
                        (car spec))))))
 
-(defun make-route (tmpl &key extra-bindings conditions)
-  (let ((bindings (plist->alist extra-bindings)))
-    (if (puri:uri-p tmpl)
-        (progn
-          (if (puri:uri-scheme tmpl)
-              (setq bindings (extend-bindings :scheme (puri:uri-scheme tmpl) (or bindings +no-bindings+))))
-          (if (puri:uri-host tmpl)
-              (setq bindings (extend-bindings :host (puri:uri-host tmpl) (or bindings +no-bindings+))))))
-    (make-instance 'route
-                   :template (apply-bindings (parse-template tmpl)
-                                             bindings)
-                   :extra-bindings bindings
-                   :conditions (plist->alist conditions))))
+(defun make-route (tmpl)
+  (make-instance 'route
+                 :template (parse-template tmpl)))
 
 ;;; route-variables
 
@@ -109,11 +71,10 @@
   (routes.unify::unify a b bindings))
   
 (defmethod routes.unify::unify/impl ((a routes.unify::variable-template) (route route) bindings)
-  (let ((e-bindings (route-extend-bindings route bindings)))
-    (if (route-check-conditions route e-bindings)
-        (call-next-method a
-                          route
-                          e-bindings))))
+  (if (route-check-conditions route bindings)
+      (call-next-method a
+                        route
+                        bindings)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; generate-url

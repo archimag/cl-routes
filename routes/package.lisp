@@ -8,7 +8,6 @@
            #:make-route
            #:route-variables
            #:route-check-conditions
-           #:route-extend-bindings
            #:parse-template
            #:match
 
