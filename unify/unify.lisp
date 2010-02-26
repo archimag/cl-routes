@@ -110,6 +110,11 @@
   (if bindings
       (unify/impl x y bindings)))
 
+;;; unify/impl default implementation
+
+(defmethod unify/impl (a b bindings)
+  (if (equal a b) bindings +fail+))
+
 
 ;;; unify/impl for wildcard
 
@@ -145,7 +150,6 @@
                        (first b)
                        bindings))))))
 
-
 ;;; unify/impl for strings
 
 (defmethod unify/impl ((a string) (b string) bindings)
@@ -173,7 +177,8 @@
                                  x))))
     (if parsed-value
         (call-next-method tmpl
-                          parsed-value)
+                          parsed-value
+                          bindings)
         +fail+)))
                       
                         
