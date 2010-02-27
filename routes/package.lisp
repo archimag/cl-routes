@@ -15,8 +15,9 @@
            #:route-variables
            #:route-check-conditions
            #:parse-template
-           #:match
+           #:route-add-prefix
 
+           #:match
            #:mapper
            #:connect
            #:reset-mapper))
