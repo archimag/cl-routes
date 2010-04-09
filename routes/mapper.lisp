@@ -22,7 +22,7 @@
                                  (list route))))
     (setf (slot-value map 'template)
           (if spec
-              (merge-templates spec route-spec)
+              (merge-uri-templates spec route-spec)
               (concatenate 'list
                            route-spec)))))
 
