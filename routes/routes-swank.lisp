@@ -24,7 +24,7 @@
   `((:value ,route ,(format nil "$~(~A~)" (routes.unify::template-spec route)))))
 
 (defmethod route-emacs-inspect ((route routes.unify::wildcard-template))
-  `((:value ,route ,(format nil "$~(~A~)" (routes.unify::template-spec route)))))
+  `((:value ,route ,(format nil "*~(~A~)" (routes.unify::template-spec route)))))
 
 (defmethod route-emacs-inspect ((route cons))
   (cond
