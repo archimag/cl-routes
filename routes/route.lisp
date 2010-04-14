@@ -29,6 +29,12 @@
                        prefix
                        (slot-value route 'template)))))
 
+;;; route name
+
+(defgeneric route-name (route)
+  (:method ((route route))
+    "ROUTE"))
+
 ;;; make-route
 
 (defun parse-path (str &optional varspecs)
