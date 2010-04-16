@@ -9,14 +9,14 @@
 (defpackage :routes
   (:use #:cl #:iter #:routes.unify #:split-sequence)
   (:export #:+no-bindings+
-
            #:route
            #:make-route
            #:route-variables
            #:route-check-conditions
            #:parse-template
+           #:route-add-prefix
+           #:route-name
            #:match
-
            #:mapper
            #:connect
            #:reset-mapper))

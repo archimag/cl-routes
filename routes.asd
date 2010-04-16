@@ -20,7 +20,8 @@
                                      (:file "merge" :depends-on ("unify"))
                                      (:file "apply" :depends-on ("bindings"))))
                (:module "routes"
-                        :components ((:file "package")
+                        :components ((:file "package")                                     
                                      (:file "route" :depends-on ("package"))
-                                     (:file "mapper" :depends-on ("route")))
+                                     (:file "mapper" :depends-on ("route"))
+                                     #+swank (:file "routes-swank" :depends-on ("mapper")))
                         :depends-on ("unify"))))

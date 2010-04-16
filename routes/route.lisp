@@ -19,6 +19,22 @@
   (:method ((route route) bindings)
     t))
 
+;;; add prefix
+
+(defgeneric route-add-prefix (route prefix)
+  (:documentation "Add the prefix to the beginning of the route template")
+  (:method ((route route) (prefix cons))
+    (setf (slot-value route 'template)
+          (concatenate 'list
+                       prefix
+                       (slot-value route 'template)))))
+
+;;; route name
+
+(defgeneric route-name (route)
+  (:method ((route route))
+    "ROUTE"))
+
 ;;; make-route
 
 (defun parse-path (str &optional varspecs)

@@ -10,7 +10,7 @@
   (:use #:cl #:iter)
   (:export #:unify
            #:make-unify-template
-           #:merge-templates
+           #:merge-uri-templates
            #:+no-bindings+
            #:extend-bindings
            #:apply-bindings
