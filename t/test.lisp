@@ -6,10 +6,9 @@
 ;;;; Author: Moskvitin Andrey <archimag@gmail.com>
 
 
-(defpackage :routes.test
-  (:use :cl :lift :routes)
-  (:export
-   :run-routes-tests))
+(defpackage #:routes.test
+  (:use #:cl #:lift #:routes #:routes.unify)
+  (:export #:run-routes-tests))
 
 (in-package :routes.test)
 
@@ -26,9 +25,16 @@
 (deftestsuite parse-template-test (routes-test) ())
 
 (addtest (parse-template-test)
-  parse-single-template-1
+  parse-template-1
   (ensure-same '("foo" "bar")
                (parse-template "/foo/bar")))
+
+(addtest (parse-template-test)
+  parse-template-2
+  (ensure-same '("foo" :x "bar" :y)
+               (let ((tmpl (parse-template "/foo/:x/bar/:y")))
+                 (first tmpl)
+                 (template-spec (second tmpl)))))
 
 
 ;; (defparameter *map*)

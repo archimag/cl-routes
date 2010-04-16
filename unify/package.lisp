@@ -14,4 +14,5 @@
            #:+no-bindings+
            #:extend-bindings
            #:apply-bindings
-           #:template-variables))
+           #:template-variables
+           #:template-spec))
