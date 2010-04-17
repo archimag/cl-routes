@@ -8,48 +8,45 @@
 
 ;;;; Unification and Substitutions (based on code from AIMA by Peter Norvig)
 
+(defpackage #:routes.unify
+  (:use #:cl #:iter)
+  (:export #:unify
+           #:make-unify-template
+           #:merge-uri-templates
+           #:+no-bindings+
+           #:extend-bindings
+           #:apply-bindings
+           #:template-variables
+           #:template-spec))
+
 (in-package #:routes.unify)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; unify-template
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass unify-template ()
+(defclass uri-component-template ()
   ((spec :initarg :spec :accessor template-spec)))
-
-(defgeneric make-unify-template (key spec))
-
-(defmacro define-unify-template (key)
-  (let ((name (intern (string-upcase (format nil "~S-template" key)))))
-    `(progn
-       (defclass ,name (unify-template) ())
-       (defmethod make-unify-template ((key (eql (quote ,key))) spec)
-         (make-instance (quote ,name) :spec spec)))))
 
 ;;; template-variables
 
-(defgeneric template-variables (tmpl))
-
-(defmethod template-variables (tmpl)
-  nil)
-
-(defmethod template-variables ((tmpl (eql nil)))
-  nil)
-
-(defmethod template-variables ((tmpl cons))
-  (concatenate 'list
-               (template-variables (car tmpl))
-               (template-variables (cdr tmpl))))
-
-(defmethod template-variables ((tmpl unify-template))
-  (template-variables (template-spec tmpl)))
+(defgeneric template-variables (tmpl)
+  (:method (tmpl)
+    nil)
+  (:method ((tmpl cons))
+    (concatenate 'list
+                 (template-variables (car tmpl))
+                 (template-variables (cdr tmpl))))
+  (:method ((tmpl uri-component-template))
+    (template-variables (template-spec tmpl))))
 
 ;;; variable-template
 
-(define-unify-template variable)
+(defclass variable-template (uri-component-template) ())
 
-(defmethod print-object ((tmpl variable-template) stream)
-  (format stream "#$~S" (template-spec tmpl)))
+(defun make-variable-template (spec)
+  (make-instance 'variable-template
+                 :spec spec))
 
 (defmethod template-variables ((tmpl variable-template))
   (list (template-spec tmpl)))
@@ -62,36 +59,196 @@
 
 ;;; or-template
 
-(define-unify-template or)
+(defclass or-template (uri-component-template) ())
 
-(defmethod print-object ((tmpl or-template) stream)
-  (format stream "#$(OR ~{~A~^ ~})" (template-spec tmpl)))
+(defun make-or-temlate (spec)
+  (make-instance 'or-template
+                 :spec spec))
 
 ;;; concat template
 
-(defclass concat-template (unify-template) ())
+(defclass concat-template (uri-component-template) ())
 
-(defmethod make-unify-template ((key (eql 'concat)) spec)
-  (if (cdr spec)
-      (make-instance 'concat-template :spec spec)
-      (car spec)))
-
-(defmethod make-unify-template ((key (eql 'concat)) (spec (eql nil)))
-  nil)
-
-(defmethod print-object ((tmpl concat-template) stream)
-  (format stream "#$(CONCAT ~{~A~^ ~})" (template-spec tmpl)))
+(defun make-concat-template (spec)
+  (cond
+    ((eql spec nil) nil)
+    ((cdr spec) (make-instance 'concat-template :spec spec))
+    (t (car spec))))
 
 ;;; remainder template
 
-(define-unify-template wildcard)
+(defclass wildcard-template (uri-component-template) ())
 
-(defmethod print-object ((tmpl wildcard-template) stream)
-  (format stream "#@~S" (template-spec tmpl)))
+(defun make-wildcard-template (spec)
+  (make-instance 'wildcard-template :spec spec))
 
 (defmethod template-variables ((tmpl wildcard-template))
   (list (template-spec tmpl)))
 
+;;; spec
+
+(defparameter *make-template-map*
+  '((variable . make-variable-template)
+    (concat . make-concat-template)
+    (or . make-or-temlate)
+    (wildcard . make-wildcard-template)))
+
+(defun make-unify-template (type spec)
+  (funcall (cdr (assoc type *make-template-map*))
+           spec))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; bindings
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defconstant +fail+ nil "Indicates unification failure")
+
+(defvar +no-bindings+ '((nil))
+  "Indicates unification success, with no variables.")
+
+(defun get-binding (var bindings)
+  "Find a (variable . value) pair in a binding list."
+  (assoc var bindings))
+
+(defun lookup (var bindings)
+  "Get the value part (for var) from a binding list."
+  (cdr (get-binding var bindings)))
+
+(defun extend-bindings (var val bindings)
+  "Add a (var . value) pair to a binding list."
+  (acons var
+         val
+         (if (eq bindings +no-bindings+)
+             nil
+             bindings)))
+
+(defun occurs-in-p (var x bindings)
+  "Does var occur anywhere inside x?"
+  (cond ((eq var x) t)
+        ((and (variable-p x) (get-binding x bindings))
+         (occurs-in-p var (lookup x bindings) bindings))
+        ((consp x) (or (occurs-in-p var (first x) bindings)
+                       (occurs-in-p var (rest x) bindings)))
+        (t nil)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; uri-template-equal
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defgeneric uri-template-equal (a b)
+  (:documentation "Return T if template a and template are equal"))
+
+(defmethod uri-template-equal (a b)
+  "Default implementation"
+  (equal a b))
+
+(defmethod uri-template-equal ((a uri-component-template) (b uri-component-template))
+  (and (eql (type-of a)
+            (type-of b))
+       (uri-template-equal (template-spec a)
+                           (template-spec b))))
+
+(defmethod uri-template-equal ((a cons) (b cons))
+  (and (uri-template-equal (car a)
+                           (car b))
+       (uri-template-equal (cdr a) 
+                           (cdr b))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; merge-uri-templates
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defgeneric merge-uri-templates (a b)
+  (:documentation "Merge the templates A and B into one template"))
+
+(defmethod merge-uri-templates (a b)
+  (if (uri-template-equal a b)
+      a
+      (make-unify-template 'or (list a b))))
+
+(defmethod merge-uri-templates ((a cons) (b cons))
+  (if (uri-template-equal (car a) (car b))
+      (cons (car a)
+            (merge-uri-templates (cdr a)
+                                 (cdr b)))
+      (make-unify-template 'or (list a b))))
+
+
+(defmethod merge-uri-templates (a (b or-template))
+  (merge-uri-templates b a))
+
+(defmethod merge-uri-templates ((a or-template) b)
+  (make-unify-template 'or
+                       (iter (for part in (template-spec a))
+                             (with x = nil)
+                             (if (not x)
+                                 (cond ((uri-template-equal part b) (setq x part))
+                                       ((and (consp part)
+                                             (consp b)
+                                             (uri-template-equal (car part) (car b)))
+                                        (setq x (merge-uri-templates part b)))
+                                       (t (collect part into left)))
+                                 (collect part into right))
+                             (finally (return (if x
+                                                  (concatenate 'list left (list x) right)
+                                                  (cons b left)))))))
+
+(defmethod merge-uri-templates ((a or-template) (b or-template))
+  (error "not implemented"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; apply-bindings
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defgeneric apply-bindings (tmpl bindings))
+
+(defmethod apply-bindings ((tmpl (eql nil)) bindings)
+  (declare (ignore bindings))
+  nil)
+
+(defmethod apply-bindings ((tmpl string) bindings)
+  (declare (ignore bindings))
+  tmpl)
+    
+(defmethod apply-bindings ((tmpl cons) bindings)
+  (let ((first (apply-bindings (car tmpl)
+                               bindings))
+        (rem (apply-bindings (cdr tmpl) bindings)))
+    (if (consp first)
+        (concatenate 'list
+                     first
+                     rem)
+        (cons first
+              rem))))
+
+(defmethod apply-bindings ((var variable-template) bindings)
+  (or (lookup (template-spec var) bindings)
+      var))
+
+(defmethod apply-bindings ((var wildcard-template) bindings)
+  (or (lookup (template-spec var) bindings)
+      var))
+
+;; optimize required
+(defmethod apply-bindings ((tmpl concat-template) bindings)
+  (labels ((simplify (spec)
+             (cond
+               ((= (length spec) 1) spec)
+               ((and (stringp (first spec))
+                     (stringp (second spec)))
+                (simplify (cons (concatenate 'string
+                                             (first spec)
+                                             (second spec))
+                                (cddr spec))))
+               (t (cons (car spec)
+                        (simplify (cdr spec)))))))
+    (let ((spec (simplify (apply-bindings (template-spec tmpl)
+                                          bindings))))
+      (if (cdr spec)
+          (make-unify-template 'concat spec)
+          (car spec)))))
+  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; unify/impl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -192,7 +349,7 @@
         (string (unify (remove-prefix str first-spec)
                        (make-unify-template 'concat (cdr spec))
                        bindings))
-        (unify-template (let* ((second-spec (second spec))
+        (uri-component-template (let* ((second-spec (second spec))
                                (pos (search second-spec str)))
                           (if pos
                               (unify (make-unify-template 'concat (cddr spec))
