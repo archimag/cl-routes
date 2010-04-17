@@ -17,9 +17,6 @@
 (defclass unify-template ()
   ((spec :initarg :spec :accessor template-spec)))
 
-(defun template-p (x)
-  (typep x 'unify-template))
-
 (defgeneric make-unify-template (key spec))
 
 (defmacro define-unify-template (key)
