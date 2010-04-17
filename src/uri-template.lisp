@@ -1,32 +1,20 @@
-;;;; unify.lisp
+;;;; uri-template.lisp
 ;;;;
 ;;;; This file is part of the cl-routes library, released under Lisp-LGPL.
 ;;;; See file COPYING for details.
 ;;;;
 ;;;; Author: Moskvitin Andrey <archimag@gmail.com>
+;;;;
+;;;; Unification and substitutions based on code from AIMA by Peter Norvig
 
-
-;;;; Unification and Substitutions (based on code from AIMA by Peter Norvig)
-
-(defpackage #:routes.unify
-  (:use #:cl #:iter)
-  (:export #:unify
-           #:make-unify-template
-           #:merge-uri-templates
-           #:+no-bindings+
-           #:extend-bindings
-           #:apply-bindings
-           #:template-variables
-           #:template-spec))
-
-(in-package #:routes.unify)
+(in-package #:routes)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; unify-template
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass uri-component-template ()
-  ((spec :initarg :spec :accessor template-spec)))
+  ((spec :initarg :spec :accessor template-data)))
 
 ;;; template-variables
 
@@ -38,7 +26,7 @@
                  (template-variables (car tmpl))
                  (template-variables (cdr tmpl))))
   (:method ((tmpl uri-component-template))
-    (template-variables (template-spec tmpl))))
+    (template-variables (template-data tmpl))))
 
 ;;; variable-template
 
@@ -49,13 +37,13 @@
                  :spec spec))
 
 (defmethod template-variables ((tmpl variable-template))
-  (list (template-spec tmpl)))
+  (list (template-data tmpl)))
 
 (defun variable-p (x)
   (typep x 'variable-template))
 
 (defclass custom-variable-template (variable-template)
-  ((parse-fun :initarg :parse :initform nil :reader custom-variable-parse-fun)))
+  ((parse-fun :initarg :parse :initform nil :reader variable-parse-fun)))
 
 ;;; or-template
 
@@ -75,7 +63,7 @@
     ((cdr spec) (make-instance 'concat-template :spec spec))
     (t (car spec))))
 
-;;; remainder template
+;;;  template
 
 (defclass wildcard-template (uri-component-template) ())
 
@@ -83,9 +71,9 @@
   (make-instance 'wildcard-template :spec spec))
 
 (defmethod template-variables ((tmpl wildcard-template))
-  (list (template-spec tmpl)))
+  (list (template-data tmpl)))
 
-;;; spec
+;;; make-unify-template
 
 (defparameter *make-template-map*
   '((variable . make-variable-template)
@@ -146,8 +134,8 @@
 (defmethod uri-template-equal ((a uri-component-template) (b uri-component-template))
   (and (eql (type-of a)
             (type-of b))
-       (uri-template-equal (template-spec a)
-                           (template-spec b))))
+       (uri-template-equal (template-data a)
+                           (template-data b))))
 
 (defmethod uri-template-equal ((a cons) (b cons))
   (and (uri-template-equal (car a)
@@ -180,7 +168,7 @@
 
 (defmethod merge-uri-templates ((a or-template) b)
   (make-unify-template 'or
-                       (iter (for part in (template-spec a))
+                       (iter (for part in (template-data a))
                              (with x = nil)
                              (if (not x)
                                  (cond ((uri-template-equal part b) (setq x part))
@@ -223,11 +211,11 @@
               rem))))
 
 (defmethod apply-bindings ((var variable-template) bindings)
-  (or (lookup (template-spec var) bindings)
+  (or (lookup (template-data var) bindings)
       var))
 
 (defmethod apply-bindings ((var wildcard-template) bindings)
-  (or (lookup (template-spec var) bindings)
+  (or (lookup (template-data var) bindings)
       var))
 
 ;; optimize required
@@ -243,7 +231,7 @@
                                 (cddr spec))))
                (t (cons (car spec)
                         (simplify (cdr spec)))))))
-    (let ((spec (simplify (apply-bindings (template-spec tmpl)
+    (let ((spec (simplify (apply-bindings (template-data tmpl)
                                           bindings))))
       (if (cdr spec)
           (make-unify-template 'concat spec)
@@ -267,7 +255,7 @@
 
 ;;; unify/impl for wildcard
 
-(defmethod unify/impl ((tmpl wildcard-template) x bindings &aux (var (template-spec tmpl)))
+(defmethod unify/impl ((tmpl wildcard-template) x bindings &aux (var (template-data tmpl)))
   (cond ((get-binding var bindings)
          (unify (lookup var bindings) x bindings))
         ((and (variable-p x) (get-binding x bindings))
@@ -309,7 +297,7 @@
 (defmethod unify/impl (a (b variable-template) bindings)
   (unify b a bindings))
 
-(defmethod unify/impl ((tmpl variable-template) x bindings &aux (var (template-spec tmpl)))
+(defmethod unify/impl ((tmpl variable-template) x bindings &aux (var (template-data tmpl)))
   (cond ((get-binding var bindings)
          (unify (lookup var bindings) x bindings))
         ((and (variable-p x) (get-binding x bindings))
@@ -322,7 +310,7 @@
 
 (defmethod unify/impl ((tmpl custom-variable-template) x bindings)
   (let ((parsed-value (ignore-errors
-                        (funcall (custom-variable-parse-fun tmpl)
+                        (funcall (variable-parse-fun tmpl)
                                  x))))
     (if parsed-value
         (call-next-method tmpl
@@ -343,7 +331,7 @@
              (if (and (> (length str) prefix-length)
                       (string= (subseq str 0 prefix-length) prefix))
                  (subseq str prefix-length)))))
-    (let* ((spec (template-spec tmpl))
+    (let* ((spec (template-data tmpl))
            (first-spec (car spec)))
       (typecase first-spec
         (string (unify (remove-prefix str first-spec)
@@ -368,7 +356,7 @@
   (unify b a bindings))
 
 (defmethod unify/impl ((tmpl or-template) x bindings)
-  (let ((spec (template-spec tmpl)))
+  (let ((spec (template-data tmpl)))
     (iter (for item in spec)
           (with result = nil)
           (with result-variable-count = -1)

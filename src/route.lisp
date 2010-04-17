@@ -32,14 +32,14 @@
            (let* ((spec (intern (string-upcase name) :keyword))
                   (parse-fun (getf varspecs spec )))
              (if parse-fun
-                 (make-instance 'routes.unify::custom-variable-template
+                 (make-instance 'custom-variable-template
                                 :spec spec
                                 :parse parse-fun)
                  (make-unify-template 'variable spec)))))
     (if (> (length str) 0)
         (if (char= (char str 0)
                    #\*)
-            (list (make-unify-template 'routes.unify::wildcard
+            (list (make-unify-template 'wildcard
                                        (intern (string-upcase (subseq str 1)) :keyword)))
             (let ((pos (position #\: str)))
               (if pos
@@ -71,7 +71,7 @@
   (iter (for path in (split-template (string-left-trim "/" tmpl)))
         (collect (let ((spec (routes::parse-path path varspecs)))
                    (if (cdr spec)
-                       (routes.unify:make-unify-template 'routes.unify::concat spec)
+                       (make-unify-template 'concat spec)
                        (car spec))))))
 
 (defun make-route (tmpl &optional varspecs)
@@ -81,15 +81,15 @@
 ;;; route-variables
 
 (defun route-variables (route)
-  (routes.unify:template-variables (slot-value route
+  (template-variables (slot-value route
                                                'template)))
 
 ;;; unify/impl for route
 
-(defmethod routes.unify::unify/impl ((b route) (a routes.unify::variable-template) bindings)
-  (routes.unify::unify a b bindings))
+(defmethod unify/impl ((b route) (a variable-template) bindings)
+  (unify a b bindings))
   
-(defmethod routes.unify::unify/impl ((a routes.unify::variable-template) (route route) bindings)
+(defmethod unify/impl ((a variable-template) (route route) bindings)
   (if (route-check-conditions route bindings)
       (call-next-method a
                         route

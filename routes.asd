@@ -13,11 +13,28 @@
 
 (defsystem routes
   :depends-on (#:puri #:iterate #:split-sequence)
-  :components ((:module "unify"
-                        :components ((:file "unify")))
-               (:module "routes"
-                        :components ((:file "package")                                     
-                                     (:file "route" :depends-on ("package"))
+  :components ((:module "src"
+                        :components ((:file "package")
+                                     (:file "uri-template" :depends-on ("package"))
+                                     (:file "route" :depends-on ("uri-template"))
                                      (:file "mapper" :depends-on ("route"))
-                                     #+swank (:file "routes-swank" :depends-on ("mapper")))
-                        :depends-on ("unify"))))
+                                     #+swank (:file "routes-swank" :depends-on ("mapper"))))))
+
+(defmethod perform ((o test-op) (c (eql (find-system 'routes))))
+  (operate 'load-op 'routes-test)
+  (operate 'test-op 'routes-test :force t))
+
+(defsystem routes-test
+  :depends-on (#:routes #:lift)
+  :components ((:module "t"
+                        :components ((:file "test")))))
+
+(defmethod perform ((o test-op) (c (eql (find-system 'routes-test))))
+  (operate 'load-op 'routes-test )
+  (let* ((test-results (funcall (read-from-string "routes.test:run-routes-tests")))
+         (errors (funcall (read-from-string "lift:errors")  test-results))
+         (failures (funcall (read-from-string "lift:failures") test-results)))
+    (if (or errors failures)
+        (error "test-op failed: ~A"
+               (concatenate 'list errors failures))
+        (print test-results))))

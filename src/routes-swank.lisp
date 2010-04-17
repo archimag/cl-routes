@@ -16,11 +16,11 @@
 (defmethod route-emacs-inspect (route)
   (list (format nil "~A" route)))
 
-(defmethod route-emacs-inspect ((route routes.unify::variable-template))
-  `((:value ,route ,(format nil "$~(~A~)" (routes.unify::template-spec route)))))
+(defmethod route-emacs-inspect ((route variable-template))
+  `((:value ,route ,(format nil "$~(~A~)" (template-data route)))))
 
-(defmethod route-emacs-inspect ((route routes.unify::wildcard-template))
-  `((:value ,route ,(format nil "*~(~A~)" (routes.unify::template-spec route)))))
+(defmethod route-emacs-inspect ((route wildcard-template))
+  `((:value ,route ,(format nil "*~(~A~)" (template-data route)))))
 
 (defmethod route-emacs-inspect ((route cons))
   (cond
@@ -39,11 +39,11 @@
                     '("/")
                     (route-emacs-inspect (cdr route))))))
 
-(defmethod route-emacs-inspect ((route routes.unify::or-template))
+(defmethod route-emacs-inspect ((route or-template))
   (let ((*current-indention* (if (null *current-indention*)
                                  0
                                  (+ *current-indention* *indention*))))
-    (iter (for item in (sort (copy-list (routes.unify::template-spec route))
+    (iter (for item in (sort (copy-list (template-data route))
                              (lambda (t1 t2)
                                (cond
                                  ((and (stringp (car t1))
@@ -59,8 +59,8 @@
             (collect x)))))
 
 
-(defmethod route-emacs-inspect ((route routes.unify::concat-template))
-  (iter (for item in (routes.unify::template-spec route))
+(defmethod route-emacs-inspect ((route concat-template))
+  (iter (for item in (template-data route))
         (dolist (x (route-emacs-inspect item))
           (collect x))))
         
