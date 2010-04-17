@@ -33,8 +33,10 @@
   parse-template-2
   (ensure-same '("foo" :x "bar" :y)
                (let ((tmpl (parse-template "/foo/:x/bar/:y")))
-                 (first tmpl)
-                 (template-spec (second tmpl)))))
+                 (list (first tmpl)
+                       (template-spec (second tmpl))
+                       (third tmpl)
+                       (template-spec (fourth tmpl))))))
 
 
 ;; (defparameter *map*)
