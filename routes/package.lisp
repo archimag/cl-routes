@@ -14,7 +14,6 @@
            #:route-variables
            #:route-check-conditions
            #:parse-template
-           #:route-add-prefix
            #:route-name
            #:match
            #:mapper
