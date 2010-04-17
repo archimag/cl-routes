@@ -16,10 +16,6 @@
 (defmethod route-emacs-inspect (route)
   (list (format nil "~A" route)))
 
-
-(defmethod route-emacs-inspect ((route restas::simple-route))
-  (list ""))
-
 (defmethod route-emacs-inspect ((route routes.unify::variable-template))
   `((:value ,route ,(format nil "$~(~A~)" (routes.unify::template-spec route)))))
 
