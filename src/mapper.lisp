@@ -56,6 +56,5 @@
     (if res
         (let ((route (cdar res))
               (bindings (cdr res)))
-          (cons route
-                (reverse bindings))))))
-
+          (values route
+                  (reverse bindings))))))
