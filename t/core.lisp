@@ -1,4 +1,4 @@
-;;;; test.lisp
+;;;; core.lisp
 ;;;;
 ;;;; This file is part of the cl-routes library, released under Lisp-LGPL.
 ;;;; See file COPYING for details.

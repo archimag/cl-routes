@@ -27,7 +27,7 @@
 (defsystem routes-test
   :depends-on (#:routes #:lift)
   :components ((:module "t"
-                        :components ((:file "test")))))
+                        :components ((:file "core")))))
 
 (defmethod perform ((o test-op) (c (eql (find-system 'routes-test))))
   (operate 'load-op 'routes-test )
