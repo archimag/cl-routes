@@ -17,11 +17,6 @@
 (defclass unify-template ()
   ((spec :initarg :spec :accessor template-spec)))
 
-(defmethod make-load-form ((self unify-template) &optional env)
-  (declare (ignore env))
-  `(make-instance ',(class-name (class-of self))
-                  :spec ',(template-spec self)))
-
 (defun template-p (x)
   (typep x 'unify-template))
 
