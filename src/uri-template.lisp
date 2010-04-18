@@ -45,14 +45,6 @@
 (defclass custom-variable-template (variable-template)
   ((parse-fun :initarg :parse :initform nil :reader variable-parse-fun)))
 
-;;; or-template
-
-(defclass or-template (uri-component-template) ())
-
-(defun make-or-temlate (spec)
-  (make-instance 'or-template
-                 :spec spec))
-
 ;;; concat template
 
 (defclass concat-template (uri-component-template) ())
@@ -72,6 +64,65 @@
 
 (defmethod template-variables ((tmpl wildcard-template))
   (list (template-data tmpl)))
+
+;;; or-template
+
+(defclass or-template (uri-component-template) ())
+
+(defun make-or-temlate (spec)
+  (labels ((not-string-position (tmpl &optional (init 0))
+             (cond
+               ((null tmpl) nil)
+               ((and (consp tmpl)
+                     (or (stringp (car tmpl))
+                         (typep (car tmpl) 'route)))
+                (not-string-position (cdr tmpl) (1+ init)))
+               (t init)))
+           (wildcard-position (tmpl &optional (init 0))
+             (cond
+               ((null tmpl) nil)
+               ((and (consp tmpl)
+                     (typep (car tmpl) 'wildcard-template))
+                init)
+               ((consp tmpl)
+                (wildcard-position (cdr tmpl) (1+ init)))
+               (t nil)))
+           (less (x y
+                    &aux
+                    (posx (not-string-position x))
+                    (posy (not-string-position y)))
+             (cond
+               ((and (not posx)
+                     (not posy))
+                t)
+               ((and posx
+                     (not posy)) 
+                nil)
+               ((and (not posx)
+                     posy)
+                t)
+               ((or (not (= posx 0))
+                    (not (= posy 0)))
+                (if (= posx posy)
+                    (string< (car x) (car y))
+                    (> posx posy)))
+               (t (let ((wildcard-pos-x (wildcard-position x))
+                        (wildcard-pos-y (wildcard-position y)))
+                    (cond
+                      ((and (not wildcard-pos-x)
+                            (not wildcard-pos-y))
+                       (>= (length (template-variables x))
+                           (length (template-variables y))))
+                      ((and (not wildcard-pos-x)
+                            wildcard-pos-y)
+                       t)
+                      ((and wildcard-pos-x
+                            (not wildcard-pos-y))
+                       nil)
+                      (t t)))))))
+    (make-instance 'or-template
+                   :spec (sort (copy-seq spec)
+                               #'less))))
 
 ;;; make-unify-template
 
@@ -198,7 +249,7 @@
 (defmethod apply-bindings ((tmpl string) bindings)
   (declare (ignore bindings))
   tmpl)
-    
+
 (defmethod apply-bindings ((tmpl cons) bindings)
   (let ((first (apply-bindings (car tmpl)
                                bindings))
@@ -236,7 +287,7 @@
       (if (cdr spec)
           (make-unify-template 'concat spec)
           (car spec)))))
-  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; unify/impl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -317,9 +368,9 @@
                           parsed-value
                           bindings)
         +fail+)))
-                      
-                        
-  
+
+
+
 ;;; unify/impl concat-template
 
 (defmethod unify/impl (a (b concat-template) bindings)
@@ -338,16 +389,16 @@
                        (make-unify-template 'concat (cdr spec))
                        bindings))
         (uri-component-template (let* ((second-spec (second spec))
-                               (pos (search second-spec str)))
-                          (if pos
-                              (unify (make-unify-template 'concat (cddr spec))
-                                     (if (> (length str)
-                                            (+ (length second-spec) pos))
-                                         (subseq str (+ (length second-spec) pos)))
-                                     (unify first-spec
-                                            (subseq str 0 pos)
-                                            bindings))
-                              +fail+)))
+                                       (pos (search second-spec str)))
+                                  (if pos
+                                      (unify (make-unify-template 'concat (cddr spec))
+                                             (if (> (length str)
+                                                    (+ (length second-spec) pos))
+                                                 (subseq str (+ (length second-spec) pos)))
+                                             (unify first-spec
+                                                    (subseq str 0 pos)
+                                                    bindings))
+                                      +fail+)))
         (t +fail+)))))
 
 ;; unify/impl for or-template
@@ -356,22 +407,9 @@
   (unify b a bindings))
 
 (defmethod unify/impl ((tmpl or-template) x bindings)
-  (let ((spec (template-data tmpl)))
-    (iter (for item in spec)
-          (with result = nil)
-          (with result-variable-count = -1)
-          (let* ((item-unify-result (unify item x bindings))
-                 (count (if item-unify-result (length item-unify-result))))
-            (if (and item-unify-result
-                     (not (find (car item)
-                           '(variable-template or-template concat-template wildcard-template)
-                           :test #'typep)))
-                (return item-unify-result))
-            (if (and count (> count result-variable-count))
-                (progn 
-                  (setq result item-unify-result)
-                  (setq result-variable-count count))))
-          (finally (return result)))))
+  (iter (for variant in (template-data tmpl))
+        (let ((result (unify variant x bindings)))
+          (finding result such-that result))))
 
 ;;; default unify/impl    
 
