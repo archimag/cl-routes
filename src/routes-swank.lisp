@@ -43,16 +43,6 @@
   (let ((*current-indention* (if (null *current-indention*)
                                  0
                                  (+ *current-indention* *indention*))))
-    ;; (iter (for item in (sort (copy-list (template-data route))
-    ;;                          (lambda (t1 t2)
-    ;;                            (cond
-    ;;                              ((and (stringp (car t1))
-    ;;                                   (stringp (car t2)))
-    ;;                               (string> (car t2)
-    ;;                                        (car t1)))
-    ;;                              ((stringp (car t1)) t)
-    ;;                              ((stringp (car t2)) nil)
-    ;;                              (t t)))))
     (iter (for item in (template-data route))
           (collect '(:newline))
           (collect (make-string *current-indention* :initial-element #\Space))
