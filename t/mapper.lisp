@@ -38,6 +38,7 @@
           (make-test-route "wildcard-1" "*foo")
           (make-test-route "main" "/")
           (make-test-route "articles" "articles/")
+          (make-test-route "article-concat-1" "articles/:(article-id).html")
           (make-test-route "article" "articles/:article-id")
           (make-test-route "article2" "articles/:(author)-:(id).html")
           (make-test-route "article3"
@@ -49,9 +50,9 @@
                            :varspecs (list :author #'(lambda (item)
                                                        (if (not (parse-integer item :junk-allowed t))
                                                            item))
-                                           :id #'parse-integer))
+                                           :id #'parse-integer))          
           (make-test-route "article-wildcard-1" "articles/*path")
-
+          
           (make-test-route "double-1" ":foo/:bar")
           (make-test-route "triple-1" ":foo/:bar/:baz")
           )
@@ -93,6 +94,13 @@
   article-4
   (ensure-same '("article4" (:author . "chekhov") (:id . 1523))
                (multiple-value-bind (route bindings) (match *test-mapper* "articles/chekhov/1523")
+                 (cons (route-name route)
+                       bindings))))
+
+(addtest (mapper-test-suite)
+  article-concat-1
+  (ensure-same '("article" (:article-id . "hello-world"))
+               (multiple-value-bind (route bindings) (match *test-mapper* "articles/hello-world.html")
                  (cons (route-name route)
                        bindings))))
 
