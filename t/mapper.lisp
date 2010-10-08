@@ -36,6 +36,7 @@
   (:setup (setf *test-mapper*
                 (make-instance 'mapper))
           (make-test-route "wildcard-1" "*foo")
+          (make-test-route "wildcard-1" "*foo/bar")
           (make-test-route "main" "/")
           (make-test-route "articles" "articles/")
           (make-test-route "article-concat-1" "articles/:(article-id).html")

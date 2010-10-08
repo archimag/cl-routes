@@ -188,6 +188,12 @@
        (uri-template-equal (template-data a)
                            (template-data b))))
 
+(defmethod uri-template-equal ((a wildcard-template) b)
+  nil)
+
+(defmethod uri-template-equal (a (b wildcard-template))
+  nil)
+
 (defmethod uri-template-equal ((a cons) (b cons))
   (and (uri-template-equal (car a)
                            (car b))
