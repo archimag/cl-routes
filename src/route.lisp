@@ -28,19 +28,23 @@
 ;;; make-route
 
 (defun parse-path (str &optional varspecs)
-  (flet ((mkvar (name)
+  (flet ((mkvar (name &optional wildcard)
            (let* ((spec (intern (string-upcase name) :keyword))
                   (parse-fun (getf varspecs spec )))
              (if parse-fun
-                 (make-instance 'custom-variable-template
+                 (make-instance (if wildcard
+                                    'custom-wildcard-template
+                                    'custom-variable-template)
                                 :spec spec
                                 :parse parse-fun)
-                 (make-unify-template 'variable spec)))))
+                 (make-unify-template (if wildcard
+                                          'wildcard
+                                          'variable)
+                                      spec)))))
     (if (> (length str) 0)
         (if (char= (char str 0)
                    #\*)
-            (list (make-unify-template 'wildcard
-                                       (intern (string-upcase (subseq str 1)) :keyword)))
+            (list (mkvar (intern (string-upcase (subseq str 1)) :keyword) t))
             (let ((pos (position #\: str)))
               (if pos
                   (let ((rest (if (char= (elt str (1+ pos)) #\()

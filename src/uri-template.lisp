@@ -42,9 +42,6 @@
 (defun variable-p (x)
   (typep x 'variable-template))
 
-(defclass custom-variable-template (variable-template)
-  ((parse-fun :initarg :parse :initform nil :reader variable-parse-fun)))
-
 ;;; concat template
 
 (defclass concat-template (uri-component-template) ())
@@ -64,6 +61,15 @@
 
 (defmethod template-variables ((tmpl wildcard-template))
   (list (template-data tmpl)))
+
+;;; custom template
+
+(defclass custom-template ()
+  ((parse-fun :initarg :parse :initform nil :reader variable-parse-fun)))
+
+(defclass custom-variable-template (custom-template variable-template) ())
+
+(defclass custom-wildcard-template (custom-template wildcard-template) ())
 
 ;;; or-template
 
@@ -363,9 +369,19 @@
          +fail+)
         (t (extend-bindings var x bindings))))
 
-;;; unify/impl custom-variable-template
+;;; unify/impl custom-template
 
-(defmethod unify/impl ((tmpl custom-variable-template) x bindings)
+;; (defmethod unify/impl ((tmpl custom-variable-template) x bindings)
+;;   (let ((parsed-value (ignore-errors
+;;                         (funcall (variable-parse-fun tmpl)
+;;                                  x))))
+;;     (if parsed-value
+;;         (call-next-method tmpl
+;;                           parsed-value
+;;                           bindings)
+;;         +fail+)))
+
+(defmethod unify/impl ((tmpl custom-template) x bindings)
   (let ((parsed-value (ignore-errors
                         (funcall (variable-parse-fun tmpl)
                                  x))))

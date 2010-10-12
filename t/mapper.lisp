@@ -52,6 +52,11 @@
                                                            item))
                                            :id #'parse-integer))
           (make-test-route "article-wildcard-1" "articles/*path")
+          (make-test-route "article-wildcard-2"
+                           "articles/check/*path"
+                           :varspecs (list :path #'(lambda (path)
+                                                     (iter (for item in path)
+                                                           (collect (parse-integer item))))))
 
           (make-test-route "double-1" ":foo/:bar")
           (make-test-route "triple-1" ":foo/:bar/:baz")
@@ -101,6 +106,13 @@
   article-wildcard-1
   (ensure-same '("article-wildcard-1" (:path "foo" "bar" "baz"))
                (multiple-value-bind (route bindings) (match *test-mapper* "articles/foo/bar/baz")
+                 (cons (route-name route)
+                       bindings))))
+
+(addtest (mapper-test-suite)
+  article-wildcard-2
+  (ensure-same '("article-wildcard-2" (:path 1 2 3))
+               (multiple-value-bind (route bindings) (match *test-mapper* "articles/check/1/2/3")
                  (cons (route-name route)
                        bindings))))
 
