@@ -69,7 +69,7 @@
 
 (defclass or-template (uri-component-template) ())
 
-(defun make-or-temlate (spec)
+(defun make-or-template (spec)
   (labels ((not-string-position (tmpl &optional (init 0))
              (cond
                ((null tmpl) nil)
@@ -136,7 +136,7 @@
 (defparameter *make-template-map*
   '((variable . make-variable-template)
     (concat . make-concat-template)
-    (or . make-or-temlate)
+    (or . make-or-template)
     (wildcard . make-wildcard-template)))
 
 (defun make-unify-template (type spec)
