@@ -14,7 +14,7 @@
 (defun connect (map route)
   (let ((spec (slot-value map 'template))
         (route-spec (concatenate 'list
-                                 (slot-value route 'template)
+                                 (route-template route)
                                  (list route))))
     (setf (slot-value map 'template)
           (if spec
@@ -41,7 +41,7 @@
   (match map (or (cdr (puri:uri-parsed-path uri)) '("")) bindings))
 
 (defmethod match (map (route route) &optional (bindings +no-bindings+))
-  (match map (slot-value route 'template) bindings))
+  (match map (route-template route) bindings))
 
 (defmethod match (map (paths cons) &optional (bindings +no-bindings+))
   (let ((res (unify (slot-value map 'template)

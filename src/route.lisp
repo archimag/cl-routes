@@ -8,22 +8,31 @@
 
 (in-package #:routes)
 
-;;; route
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; interface
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass route ()
-  ((template :initarg :template)))
-
-;;; check-conditions
-
-(defgeneric route-check-conditions (route bindings)
-  (:method ((route route) bindings)
-    t))
-
-;;; route name
+(defgeneric route-template (route)
+  (:documentation "Template URI of ROUTE"))
 
 (defgeneric route-name (route)
-  (:method ((route route))
-    "ROUTE"))
+  (:documentation "Route name"))
+
+(defgeneric route-check-conditions (route bindings)
+  (:documentation "Used for check the additional conditions when comparing the ROUTE with the request."))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; common route
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass route ()
+  ((template :initarg :template :reader route-template)))
+
+(defmethod  route-check-conditions ((route route) bindings)
+  t)
+
+(defmethod route-name ((route route))
+  "ROUTE")
 
 ;;; make-route
 
@@ -63,16 +72,8 @@
                   (list str))))
         '(""))))
 
-(defun plist->alist (plist)
-  (iter (for rest on plist by #'cddr)
-        (collect (cons (car rest)
-                       (cadr rest)))))
-
-(defun split-template (tmpl)
-  (split-sequence #\/ (string-left-trim "/" tmpl)))
-
 (defun parse-template (tmpl &optional varspecs)
-  (iter (for path in (split-template (string-left-trim "/" tmpl)))
+  (iter (for path in (split-sequence #\/ (string-left-trim "/" tmpl)))
         (collect (let ((spec (routes::parse-path path varspecs)))
                    (if (cdr spec)
                        (make-unify-template 'concat spec)
@@ -85,8 +86,7 @@
 ;;; route-variables
 
 (defun route-variables (route)
-  (template-variables (slot-value route
-                                               'template)))
+  (template-variables (route-template route)))
 
 ;;; unify/impl for route
 
@@ -100,12 +100,30 @@
                         bindings)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; proxy route
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defclass proxy-route ()
+  ((target :initarg target :reader proxy-route-target)))
+
+(defmethod route-template ((proxy proxy-route))
+  (route-template (proxy-route-target proxy)))
+
+(defmethod route-name ((proxy proxy-route))
+  (route-name (proxy-route-target proxy)))
+
+(defmethod route-check-conditions ((proxy proxy-route) bindings)
+  (route-check-conditions (proxy-route-target proxy) bindings))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; generate-url
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun generate-url (route bindings)
   (format nil
           "~{~A~^/~}"
-          (apply-bindings (slot-value route 'template)
+          (apply-bindings (route-template route)
                           bindings)))
   

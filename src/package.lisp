@@ -18,16 +18,23 @@
            #:wildcard-template
            #:template-data
            #:variable-parse-fun
-           
-           
+
+           ;; routes
+           #:route-template
+           #:route-name
+           #:route-check-conditions
+
            #:route
            #:make-route
+           
+           #:proxy-route
            #:route-variables
-           #:route-check-conditions
+
            #:parse-template
            #:template-variables
-           #:route-name
-           #:match
+
+           ;; mapper
            #:mapper
+           #:match
            #:connect
            #:reset-mapper))
