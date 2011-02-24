@@ -28,6 +28,8 @@
            #:make-route
            
            #:proxy-route
+           #:proxy-route-target
+           
            #:route-variables
 
            #:parse-template
