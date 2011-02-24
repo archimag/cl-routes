@@ -105,7 +105,7 @@
 
 
 (defclass proxy-route ()
-  ((target :initarg target :reader proxy-route-target)))
+  ((target :initarg :target :reader proxy-route-target)))
 
 (defmethod route-template ((proxy proxy-route))
   (route-template (proxy-route-target proxy)))
@@ -116,6 +116,11 @@
 (defmethod route-check-conditions ((proxy proxy-route) bindings)
   (route-check-conditions (proxy-route-target proxy) bindings))
 
+(defmethod unify/impl ((a variable-template) (route proxy-route) bindings)
+  (if (route-check-conditions route bindings)
+      (call-next-method a
+                        route
+                        bindings)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; generate-url
