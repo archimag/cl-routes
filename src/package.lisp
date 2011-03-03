@@ -20,6 +20,7 @@
            #:variable-parse-fun
 
            ;; routes
+           #:base-route
            #:route-template
            #:route-name
            #:route-check-conditions

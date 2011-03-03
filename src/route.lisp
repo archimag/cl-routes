@@ -12,27 +12,27 @@
 ;;;; interface
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defclass base-route () ())
+
 (defgeneric route-template (route)
   (:documentation "Template URI of ROUTE"))
 
 (defgeneric route-name (route)
-  (:documentation "Route name"))
+  (:documentation "Route name")
+  (:method (route)
+    "ROUTE"))
 
 (defgeneric route-check-conditions (route bindings)
-  (:documentation "Used for check the additional conditions when comparing the ROUTE with the request."))
+  (:documentation "Used for check the additional conditions when comparing the ROUTE with the request.")
+  (:method (route bindings)
+    t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; common route
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass route ()
+(defclass route (base-route)
   ((template :initarg :template :reader route-template)))
-
-(defmethod  route-check-conditions ((route route) bindings)
-  t)
-
-(defmethod route-name ((route route))
-  "ROUTE")
 
 ;;; make-route
 
@@ -83,28 +83,11 @@
   (make-instance 'route
                  :template (parse-template tmpl varspecs)))
 
-;;; route-variables
-
-(defun route-variables (route)
-  (template-variables (route-template route)))
-
-;;; unify/impl for route
-
-(defmethod unify/impl ((b route) (a variable-template) bindings)
-  (unify a b bindings))
-  
-(defmethod unify/impl ((a variable-template) (route route) bindings)
-  (if (route-check-conditions route bindings)
-      (call-next-method a
-                        route
-                        bindings)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; proxy route
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-(defclass proxy-route ()
+(defclass proxy-route (base-route)
   ((target :initarg :target :reader proxy-route-target)))
 
 (defmethod route-template ((proxy proxy-route))
@@ -116,7 +99,21 @@
 (defmethod route-check-conditions ((proxy proxy-route) bindings)
   (route-check-conditions (proxy-route-target proxy) bindings))
 
-(defmethod unify/impl ((a variable-template) (route proxy-route) bindings)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; route-variables
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun route-variables (route)
+  (template-variables (route-template route)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; unify/impl for route
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmethod unify/impl ((b base-route) (a variable-template) bindings)
+  (unify a b bindings))
+  
+(defmethod unify/impl ((a variable-template) (route base-route) bindings)
   (if (route-check-conditions route bindings)
       (call-next-method a
                         route
