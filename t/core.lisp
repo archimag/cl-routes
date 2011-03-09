@@ -63,6 +63,11 @@
   (ensure-same '("foo" "bar" "baz" "")
                (parse-template "/foo/bar/baz/")))
 
+(addtest (parse-template-test)
+  parse-simple-template-6
+  (ensure-same '("foo" "bar" "baz" )
+               (parse-template "/ foo/bar /baz ")))
+
 ;;;; variable-template
 
 (addtest (parse-template-test)

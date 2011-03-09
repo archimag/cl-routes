@@ -74,7 +74,7 @@
 
 (defun parse-template (tmpl &optional varspecs)
   (iter (for path in (split-sequence #\/ (string-left-trim "/" tmpl)))
-        (collect (let ((spec (routes::parse-path path varspecs)))
+        (collect (let ((spec (routes::parse-path (string-trim " " path) varspecs)))
                    (if (cdr spec)
                        (make-unify-template 'concat spec)
                        (car spec))))))
