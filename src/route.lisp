@@ -62,7 +62,7 @@
                                         (cons (mkvar (subseq str (+ pos 2) end))
                                               (if (< (1+ end) (length str))
                                                   (handler-case
-                                                      (parse-path (subseq str (1+ end)))
+                                                      (parse-path (subseq str (1+ end)) varspecs)
                                                     (condition () (error "Bad format of the ~S" str)))))
                                         (error "Bad format of the ~S" str)))
                                   (list (mkvar (subseq str (1+ pos)))))))
