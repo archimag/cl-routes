@@ -419,9 +419,12 @@
     (let* ((spec (template-data tmpl))
            (first-spec (car spec)))
       (typecase first-spec
-        (string (unify (remove-prefix str first-spec)
-                       (make-unify-template 'concat (cdr spec))
-                       bindings))
+        (string (let ((no-prefix-str (remove-prefix str first-spec)))
+                  (if no-prefix-str
+                      (unify no-prefix-str
+                             (make-unify-template 'concat (cdr spec))
+                             bindings)
+                      +fail+)))
         (uri-component-template (let* ((second-spec (second spec))
                                        (pos (search second-spec str)))
                                   (if pos

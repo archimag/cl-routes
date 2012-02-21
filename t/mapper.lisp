@@ -65,7 +65,10 @@
           ;;(make-test-route "article-wildcard-3" "articles/check/*path")
 
           (make-test-route "double-1" ":foo/:bar")
-          (make-test-route "triple-1" ":foo/:bar/:baz"))
+          (make-test-route "triple-1" ":foo/:bar/:baz")
+
+          (make-test-route "person" "person:(id)")
+          (make-test-route "impossible" "impossible:(siid)"))
   (:teardown (reset-mapper *test-mapper*)))
                                              
 
@@ -162,3 +165,18 @@
                (multiple-value-bind (route bindings) (match *test-mapper* "foo/bar/baz/xxx/")
                  (cons (route-name route)
                        bindings))))
+
+(addtest (mapper-test-suite)
+  person-1
+  (ensure-same '("person" (:id . "1"))
+               (multiple-value-bind (route bindings) (match *test-mapper* "person1")
+                 (cons (route-name route)
+                       bindings))))
+
+(addtest (mapper-test-suite)
+  impossible-1
+  (ensure-same '("impossible" (:siid . "1"))
+               (multiple-value-bind (route bindings) (match *test-mapper* "impossible1")
+                 (cons (route-name route)
+                       bindings))))
+                 
