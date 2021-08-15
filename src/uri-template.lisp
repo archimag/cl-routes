@@ -207,9 +207,11 @@
                            (template-data b))))
 
 (defmethod uri-template-equal ((a wildcard-template) b)
+  (declare (ignore a b))
   nil)
 
 (defmethod uri-template-equal (a (b wildcard-template))
+  (declare (ignore a b))
   nil)
 
 (defmethod uri-template-equal ((a cons) (b cons))
@@ -447,9 +449,4 @@
   (iter (for variant in (template-data tmpl))
         (let ((result (unify variant x bindings)))
           (finding result such-that result))))
-
-;;; default unify/impl    
-
-(defmethod unify/impl (x y bindings)
-  (if (eql x y) bindings +fail+))
 
