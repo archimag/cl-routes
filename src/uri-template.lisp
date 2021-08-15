@@ -450,8 +450,3 @@
         (let ((result (unify variant x bindings)))
           (finding result such-that result))))
 
-;;; default unify/impl    
-
-(defmethod unify/impl (x y bindings)
-  (if (eql x y) bindings +fail+))
-
