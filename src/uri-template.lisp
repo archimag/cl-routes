@@ -207,9 +207,11 @@
                            (template-data b))))
 
 (defmethod uri-template-equal ((a wildcard-template) b)
+  (declare (ignore a b))
   nil)
 
 (defmethod uri-template-equal (a (b wildcard-template))
+  (declare (ignore a b))
   nil)
 
 (defmethod uri-template-equal ((a cons) (b cons))
